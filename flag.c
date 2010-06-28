@@ -63,7 +63,7 @@ void init_mesh(
     );
 }
 
-void init_flag_mesh(struct flag_mesh *out_mesh)
+struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 {
     static const GLsizei
         FLAG_X_RES = 100,
@@ -121,6 +121,9 @@ void init_flag_mesh(struct flag_mesh *out_mesh)
         element_count, element_data,
         GL_STREAM_DRAW
     );
+
+    free((void*)element_data);
+    return vertex_data;
 }
 
 void init_background_mesh(struct flag_mesh *out_mesh)
@@ -151,12 +154,25 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         TEX_WALL_LO[2]   = { 0.5625f, 0.03125f },
         TEX_WALL_HI[2]   = { 1.0f,    0.96875f },
 
+#define _FLAGPOLE_T(y) \
+    (TEX_FLAGPOLE_LO[1] \
+        + (TEX_FLAGPOLE_HI[1] - TEX_FLAGPOLE_LO[1]) \
+        * ((y) - FLAGPOLE_TRUCK_TOP)/(FLAGPOLE_SHAFT_BOTTOM - FLAGPOLE_TRUCK_TOP) \
+    )
+
     static const GLfloat
         theta_step = 2.0f * (float)M_PI / (GLfloat)FLAGPOLE_RES,
-        s_step = 1.0f / (GLfloat)FLAGPOLE_RES;
+        s_step = (TEX_FLAGPOLE_HI[0] - TEX_FLAGPOLE_LO[0]) / (GLfloat)FLAGPOLE_RES,
+        t_truck_top    = TEX_FLAGPOLE_LO[1],
+        t_truck_crown  = _FLAGPOLE_T(FLAGPOLE_TRUCK_CROWN),
+        t_truck_bottom = _FLAGPOLE_T(FLAGPOLE_TRUCK_BOTTOM),
+        t_shaft_top    = _FLAGPOLE_T(FLAGPOLE_SHAFT_TOP),
+        t_shaft_bottom = _FLAGPOLE_T(FLAGPOLE_SHAFT_BOTTOM);
+
+#undef _FLAGPOLE_T
 
     GLsizei
-        flagpole_vertex_count = 1 + FLAGPOLE_RES * 6,
+        flagpole_vertex_count = 1 + FLAGPOLE_RES * 5,
         wall_vertex_count = 4,
         ground_vertex_count = 4,
         vertex_count = flagpole_vertex_count
@@ -165,8 +181,217 @@ void init_background_mesh(struct flag_mesh *out_mesh)
 
     struct flag_vertex *vertex_data
         = (flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
+    GLsizei vertex_i = 0, i;
 
+    vertex_data[0].position[0] = GROUND_LO[0];
+    vertex_data[0].position[1] = GROUND_LO[1];
+    vertex_data[0].position[2] = GROUND_LO[2];
+    vertex_data[0].position[3] = 1.0f;
+    vertex_data[0].normal[0]   = 0.0f;
+    vertex_data[0].normal[1]   = 1.0f;
+    vertex_data[0].normal[2]   = 0.0f;
+    vertex_data[0].normal[3]   = 0.0f;
+    vertex_data[0].texcoord[0] = TEX_GROUND_LO[0];
+    vertex_data[0].texcoord[1] = TEX_GROUND_LO[1];
+    vertex_data[0].texcoord[2] = 0.0f;
+    vertex_data[0].texcoord[3] = 0.0f;
 
+    vertex_data[1].position[0] = GROUND_HI[0];
+    vertex_data[1].position[1] = GROUND_LO[1];
+    vertex_data[1].position[2] = GROUND_LO[2];
+    vertex_data[1].position[3] = 1.0f;
+    vertex_data[1].normal[0]   = 0.0f;
+    vertex_data[1].normal[1]   = 1.0f;
+    vertex_data[1].normal[2]   = 0.0f;
+    vertex_data[1].normal[3]   = 0.0f;
+    vertex_data[1].texcoord[0] = TEX_GROUND_HI[0];
+    vertex_data[1].texcoord[1] = TEX_GROUND_LO[1];
+    vertex_data[1].texcoord[2] = 0.0f;
+    vertex_data[1].texcoord[3] = 0.0f;
+
+    vertex_data[2].position[0] = GROUND_HI[0];
+    vertex_data[2].position[1] = GROUND_LO[1];
+    vertex_data[2].position[2] = GROUND_HI[2];
+    vertex_data[2].position[3] = 1.0f;
+    vertex_data[2].normal[0]   = 0.0f;
+    vertex_data[2].normal[1]   = 1.0f;
+    vertex_data[2].normal[2]   = 0.0f;
+    vertex_data[2].normal[3]   = 0.0f;
+    vertex_data[2].texcoord[0] = TEX_GROUND_HI[0];
+    vertex_data[2].texcoord[1] = TEX_GROUND_HI[1];
+    vertex_data[2].texcoord[2] = 0.0f;
+    vertex_data[2].texcoord[3] = 0.0f;
+
+    vertex_data[3].position[0] = GROUND_LO[0];
+    vertex_data[3].position[1] = GROUND_LO[1];
+    vertex_data[3].position[2] = GROUND_HI[2];
+    vertex_data[3].position[3] = 1.0f;
+    vertex_data[3].normal[0]   = 0.0f;
+    vertex_data[3].normal[1]   = 1.0f;
+    vertex_data[3].normal[2]   = 0.0f;
+    vertex_data[3].normal[3]   = 0.0f;
+    vertex_data[3].texcoord[0] = TEX_GROUND_LO[0];
+    vertex_data[3].texcoord[1] = TEX_GROUND_HI[1];
+    vertex_data[3].texcoord[2] = 0.0f;
+    vertex_data[3].texcoord[3] = 0.0f;
+
+    vertex_data[4].position[0] = WALL_LO[0];
+    vertex_data[4].position[1] = WALL_LO[1];
+    vertex_data[4].position[2] = WALL_LO[2];
+    vertex_data[4].position[3] = 1.0f;
+    vertex_data[4].normal[0]   = 0.0f;
+    vertex_data[4].normal[1]   = 0.0f;
+    vertex_data[4].normal[2]   = -1.0f;
+    vertex_data[4].normal[3]   = 0.0f;
+    vertex_data[4].texcoord[0] = TEX_WALL_LO[0];
+    vertex_data[4].texcoord[1] = TEX_WALL_LO[1];
+    vertex_data[4].texcoord[2] = 0.0f;
+    vertex_data[4].texcoord[3] = 0.0f;
+
+    vertex_data[5].position[0] = WALL_HI[0];
+    vertex_data[5].position[1] = WALL_LO[1];
+    vertex_data[5].position[2] = WALL_LO[2];
+    vertex_data[5].position[3] = 1.0f;
+    vertex_data[5].normal[0]   = 0.0f;
+    vertex_data[5].normal[1]   = 0.0f;
+    vertex_data[5].normal[2]   = -1.0f;
+    vertex_data[5].normal[3]   = 0.0f;
+    vertex_data[5].texcoord[0] = TEX_WALL_HI[0];
+    vertex_data[5].texcoord[1] = TEX_WALL_LO[1];
+    vertex_data[5].texcoord[2] = 0.0f;
+    vertex_data[5].texcoord[3] = 0.0f;
+
+    vertex_data[6].position[0] = WALL_HI[0];
+    vertex_data[6].position[1] = WALL_HI[1];
+    vertex_data[6].position[2] = WALL_LO[2];
+    vertex_data[6].position[3] = 1.0f;
+    vertex_data[6].normal[0]   = 0.0f;
+    vertex_data[6].normal[1]   = 0.0f;
+    vertex_data[6].normal[2]   = -1.0f;
+    vertex_data[6].normal[3]   = 0.0f;
+    vertex_data[6].texcoord[0] = TEX_WALL_HI[0];
+    vertex_data[6].texcoord[1] = TEX_WALL_HI[1];
+    vertex_data[6].texcoord[2] = 0.0f;
+    vertex_data[6].texcoord[3] = 0.0f;
+
+    vertex_data[7].position[0] = WALL_LO[0];
+    vertex_data[7].position[1] = WALL_HI[1];
+    vertex_data[7].position[2] = WALL_LO[2];
+    vertex_data[7].position[3] = 1.0f;
+    vertex_data[7].normal[0]   = 0.0f;
+    vertex_data[7].normal[1]   = 0.0f;
+    vertex_data[7].normal[2]   = -1.0f;
+    vertex_data[7].normal[3]   = 0.0f;
+    vertex_data[7].texcoord[0] = TEX_WALL_LO[0];
+    vertex_data[7].texcoord[1] = TEX_WALL_HI[1];
+    vertex_data[7].texcoord[2] = 0.0f;
+    vertex_data[7].texcoord[3] = 0.0f;
+
+    vertex_data[8].position[0] = FLAGPOLE_AXIS_XZ[0];
+    vertex_data[8].position[1] = FLAGPOLE_TRUCK_TOP;
+    vertex_data[8].position[2] = FLAGPOLE_AXIS_XZ[1];
+    vertex_data[8].position[3] = 1.0f;
+    vertex_data[8].normal[0]   = 0.0f;
+    vertex_data[8].normal[1]   = 1.0f;
+    vertex_data[8].normal[2]   = 0.0f;
+    vertex_data[8].normal[3]   = 0.0f;
+    vertex_data[8].texcoord[0] = TEX_FLAGPOLE_LO[0];
+    vertex_data[8].texcoord[1] = t_truck_top;
+    vertex_data[8].texcoord[2] = 0.0f;
+    vertex_data[8].texcoord[3] = 0.0f;
+
+    for (i = 0, vertex_i = 9; i < FLAGPOLE_RES; ++i) {
+        float sn = sinf(theta_step * (float)i), cs = cosf(theta_step * (float)i);
+        float s = TEX_FLAGPOLE_LO[0] + s_step * (float)i;
+
+        vertex_data[vertex_i].position[0]
+            = FLAGPOLE_AXIS_XZ[0] + FLAGPOLE_TRUCK_CROWN_RADIUS*cs;
+        vertex_data[vertex_i].position[1] = FLAGPOLE_TRUCK_CROWN;
+        vertex_data[vertex_i].position[2]
+            = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_CROWN_RADIUS*sn;
+        vertex_data[vertex_i].position[3] = 1.0f;
+        // XXX normal
+        vertex_data[vertex_i].normal[0]   = cs;
+        vertex_data[vertex_i].normal[1]   = 0.0f;
+        vertex_data[vertex_i].normal[2]   = sn;
+        vertex_data[vertex_i].normal[3]   = 0.0f;
+        vertex_data[vertex_i].texcoord[0] = s;
+        vertex_data[vertex_i].texcoord[1] = t_truck_crown;
+        vertex_data[vertex_i].texcoord[2] = 0.0f;
+        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        ++vertex_i;
+
+        vertex_data[vertex_i].position[0]
+            = FLAGPOLE_AXIS_XZ[0] + FLAGPOLE_TRUCK_BOTTOM_RADIUS*cs;
+        vertex_data[vertex_i].position[1] = FLAGPOLE_TRUCK_BOTTOM;
+        vertex_data[vertex_i].position[2]
+            = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_BOTTOM_RADIUS*sn;
+        vertex_data[vertex_i].position[3] = 1.0f;
+        // XXX normal
+        vertex_data[vertex_i].normal[0]   = cs;
+        vertex_data[vertex_i].normal[1]   = 0.0f;
+        vertex_data[vertex_i].normal[2]   = sn;
+        vertex_data[vertex_i].normal[3]   = 0.0f;
+        vertex_data[vertex_i].texcoord[0] = s;
+        vertex_data[vertex_i].texcoord[1] = t_truck_bottom;
+        vertex_data[vertex_i].texcoord[2] = 0.0f;
+        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        ++vertex_i;
+
+        vertex_data[vertex_i].position[0]
+            = FLAGPOLE_AXIS_XZ[0] + FLAGPOLE_SHAFT_RADIUS*cs;
+        vertex_data[vertex_i].position[1] = FLAGPOLE_SHAFT_TOP;
+        vertex_data[vertex_i].position[2]
+            = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_SHAFT_RADIUS*sn;
+        vertex_data[vertex_i].position[3] = 1.0f;
+        vertex_data[vertex_i].normal[0]   = cs;
+        vertex_data[vertex_i].normal[1]   = 0.0f;
+        vertex_data[vertex_i].normal[2]   = sn;
+        vertex_data[vertex_i].normal[3]   = 0.0f;
+        vertex_data[vertex_i].texcoord[0] = s;
+        vertex_data[vertex_i].texcoord[1] = t_shaft_top;
+        vertex_data[vertex_i].texcoord[2] = 0.0f;
+        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        ++vertex_i;
+
+        vertex_data[vertex_i].position[0]
+            = FLAGPOLE_AXIS_XZ[0] + FLAGPOLE_SHAFT_RADIUS*cs;
+        vertex_data[vertex_i].position[1] = FLAGPOLE_SHAFT_BOTTOM;
+        vertex_data[vertex_i].position[2]
+            = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_BOTTOM_RADIUS*sn;
+        vertex_data[vertex_i].position[3] = 1.0f;
+        vertex_data[vertex_i].normal[0]   = cs;
+        vertex_data[vertex_i].normal[1]   = 0.0f;
+        vertex_data[vertex_i].normal[2]   = sn;
+        vertex_data[vertex_i].normal[3]   = 0.0f;
+        vertex_data[vertex_i].texcoord[0] = s;
+        vertex_data[vertex_i].texcoord[1] = t_shaft_bottom;
+        vertex_data[vertex_i].texcoord[2] = 0.0f;
+        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        ++vertex_i;
+
+        vertex_data[vertex_i].position[0]
+            = FLAGPOLE_AXIS_XZ[0] + FLAGPOLE_SHAFT_RADIUS*cs;
+        vertex_data[vertex_i].position[1] = FLAGPOLE_SHAFT_BOTTOM;
+        vertex_data[vertex_i].position[2]
+            = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_BOTTOM_RADIUS*sn;
+        vertex_data[vertex_i].position[3] =  1.0f;
+        vertex_data[vertex_i].normal[0]   =  0.0f;
+        vertex_data[vertex_i].normal[1]   = -1.0f;
+        vertex_data[vertex_i].normal[2]   =  0.0f;
+        vertex_data[vertex_i].normal[3]   =  0.0f;
+        vertex_data[vertex_i].texcoord[0] =  s;
+        vertex_data[vertex_i].texcoord[1] =  t_shaft_bottom;
+        vertex_data[vertex_i].texcoord[2] =  0.0f;
+        vertex_data[vertex_i].texcoord[3] =  0.0f;
+        ++vertex_i;
+    }
+
+    /* XXX set up element array */
+    /* XXX init mesh */
+
+    free(element_data);
+    free(vertex_data);
 }
 
 void upload_flag_mesh(
