@@ -172,7 +172,7 @@ void init_background_mesh(struct flag_mesh *out_mesh)
 #undef _FLAGPOLE_T
 
     GLsizei
-        flagpole_vertex_count = 1 + FLAGPOLE_RES * 5,
+        flagpole_vertex_count = 2 + FLAGPOLE_RES * 5,
         wall_vertex_count = 4,
         ground_vertex_count = 4,
         vertex_count = flagpole_vertex_count
@@ -181,7 +181,21 @@ void init_background_mesh(struct flag_mesh *out_mesh)
 
     struct flag_vertex *vertex_data
         = (flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
-    GLsizei vertex_i = 0, i;
+    GLsizei vertex_i = 0, elt_i, i;
+
+    GLsizei
+        flagpole_element_count = 3 * (8 * FLAGPOLE_RES),
+        wall_element_count = 6,
+        ground_element_count = 6,
+        element_count = flagpole_element_count
+            + wall_element_count
+            + ground_element_count;
+
+    struct flag_vertex *vertex_data
+        = (flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
+
+    struct GLushort *element_data
+        = (GLushort*) malloc(vertex_count * sizeof(GLushort));
 
     vertex_data[0].position[0] = GROUND_LO[0];
     vertex_data[0].position[1] = GROUND_LO[1];
@@ -386,9 +400,76 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].texcoord[3] =  0.0f;
         ++vertex_i;
     }
+    vertex_data[vertex_i].position[0]
+        = 0.0f;
+    vertex_data[vertex_i].position[1] = FLAGPOLE_SHAFT_BOTTOM;
+    vertex_data[vertex_i].position[2]
+        = 0.0f;
+    vertex_data[vertex_i].position[3] =  1.0f;
+    vertex_data[vertex_i].normal[0]   =  0.0f;
+    vertex_data[vertex_i].normal[1]   = -1.0f;
+    vertex_data[vertex_i].normal[2]   =  0.0f;
+    vertex_data[vertex_i].normal[3]   =  0.0f;
+    vertex_data[vertex_i].texcoord[0] =  s;
+    vertex_data[vertex_i].texcoord[1] =  t_shaft_bottom;
+    vertex_data[vertex_i].texcoord[2] =  0.0f;
+    vertex_data[vertex_i].texcoord[3] =  0.0f;
 
-    /* XXX set up element array */
-    /* XXX init mesh */
+    element_i = 0;
+
+    element_data[element_i++] = 0;
+    element_data[element_i++] = 1;
+    element_data[element_i++] = 2;
+
+    element_data[element_i++] = 0;
+    element_data[element_i++] = 2;
+    element_data[element_i++] = 3;
+
+    element_data[element_i++] = 4;
+    element_data[element_i++] = 5;
+    element_data[element_i++] = 6;
+
+    element_data[element_i++] = 4;
+    element_data[element_i++] = 6;
+    element_data[element_i++] = 7;
+
+    for (i = 0; i < FLAGPOLE_RES - 1; ++i) {
+        element_data[element_i++] = 8;
+        element_data[element_i++] = 5*(i+1);
+        element_data[element_i++] = 5*i;
+
+        element_data[element_i++] = 5*i;
+        element_data[element_i++] = 5*(i+1);
+        element_data[element_i++] = 5*i     + 1;
+        element_data[element_i++] = 5*i     + 1;
+        element_data[element_i++] = 5*(i+1);
+        element_data[element_i++] = 5*(i+1) + 1;
+
+        element_data[element_i++] = 5*i     + 1;
+        element_data[element_i++] = 5*(i+1) + 1;
+        element_data[element_i++] = 5*i     + 2;
+        element_data[element_i++] = 5*i     + 2;
+        element_data[element_i++] = 5*(i+1) + 1;
+        element_data[element_i++] = 5*(i+1) + 2;
+
+        element_data[element_i++] = 5*i     + 2;
+        element_data[element_i++] = 5*(i+1) + 2;
+        element_data[element_i++] = 5*i     + 3;
+        element_data[element_i++] = 5*i     + 3;
+        element_data[element_i++] = 5*(i+1) + 2;
+        element_data[element_i++] = 5*(i+1) + 3;
+
+        element_data[element_i++] = 5*i     + 4;
+        element_data[element_i++] = 5*(i+1) + 4;
+        element_data[element_i++] = vertex_i;
+    }
+    
+    init_mesh(
+        out_mesh,
+        vertex_count, vertex_data,
+        element_count, element_data,
+        GL_STATIC_DRAW
+    );
 
     free(element_data);
     free(vertex_data);
