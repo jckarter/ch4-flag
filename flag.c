@@ -6,6 +6,8 @@
 #  include <GL/glut.h>
 #endif
 #include <stddef.h>
+#include <math.h>
+#include <stdio.h>
 
 struct flag_mesh {
     GLuint vertex_buffer, element_buffer;
@@ -21,7 +23,7 @@ struct flag_vertex {
 
 static struct {
     struct flag_mesh flag, background;
-    flag_vertex *flag_vertex_array;
+    struct flag_vertex *flag_vertex_array;
     
     struct {
         GLuint vertex_shader, fragment_shader, program;
@@ -31,14 +33,14 @@ static struct {
         } uniforms;
 
         struct {
-            GLint position, normal, texture;
+            GLint position, normal, texcoord;
         } attributes;
     } flag_program;
 
     GLfloat p_matrix[16];
 } g_resources;
 
-void init_mesh(
+static void init_mesh(
     struct flag_mesh *out_mesh,
     struct flag_vertex const *vertex_data, GLsizei vertex_count,
     GLushort const *element_data, GLsizei element_count,
@@ -64,12 +66,14 @@ void init_mesh(
     );
 }
 
-void calculate_flag_vertex(flag_vertex *v, GLfloat s, GLfloat t, GLfloat time)
-{
+static void calculate_flag_vertex(
+    struct flag_vertex *v,
+    GLfloat s, GLfloat t, GLfloat time
+) {
     v->position[0] = s - 0.125f*(1.0f - s)*t*(t-1.0f)*sinf(1.5f*(GLfloat)M_PI*time);
     v->position[1] = 0.75f*t - 0.375f;
     v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)) - t*(t-1.0f));
-    v->position[3] = 1.0f;
+    v->position[3] = 0.0f;
 
     GLfloat
         sgrad[3] = {
@@ -92,21 +96,16 @@ void calculate_flag_vertex(flag_vertex *v, GLfloat s, GLfloat t, GLfloat time)
     v->normal[3] = 0.0f;
 }
 
-static const GLsizei
-    FLAG_X_RES = 100,
-    FLAG_Y_RES = 75,
-    FLAG_S_STEP = 1.0f/((GLfloat)(FLAG_X_RES - 1)),
-    FLAG_T_STEP = 1.0f/((GLfloat)(FLAG_Y_RES - 1)),
-    FLAG_VERTEX_COUNT = FLAG_X_RES * FLAG_Y_RES;
+#define FLAG_X_RES 100
+#define FLAG_Y_RES 75
+#define FLAG_S_STEP (1.0f/((GLfloat)(FLAG_X_RES - 1)))
+#define FLAG_T_STEP (1.0f/((GLfloat)(FLAG_Y_RES - 1)))
+#define FLAG_VERTEX_COUNT (FLAG_X_RES * FLAG_Y_RES)
 
-struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
+static struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 {
-    static const GLfloat
-        s_step = 
-        t_step =
-
     struct flag_vertex *vertex_data
-        = (flag_vertex*) malloc(FLAG_VERTEX_COUNT * sizeof(struct flag_vertex));
+        = (struct flag_vertex*) malloc(FLAG_VERTEX_COUNT * sizeof(struct flag_vertex));
     GLsizei element_count = 6 * (FLAG_X_RES - 1) * (FLAG_Y_RES - 1);
     GLushort *element_data
         = (GLushort*) malloc(element_count * sizeof(GLushort));
@@ -125,8 +124,8 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
             vertex_data[i].texcoord[3] = 0.0f;
         }
 
-    for (y = 0, i = 0, index = 0; y < FLAG_Y_RES - 1; ++y, ++index)
-        for (x = 0; x < FLAG_X_RES - 1; ++x, ++index) {
+    for (t = 0, i = 0, index = 0; t < FLAG_Y_RES - 1; ++t, ++index)
+        for (s = 0; s < FLAG_X_RES - 1; ++s, ++index) {
             element_data[i++] = index             ;
             element_data[i++] = index+FLAG_X_RES  ;
             element_data[i++] = index           +1;
@@ -137,8 +136,8 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 
     init_mesh(
         out_mesh,
-        FLAG_VERTEX_COUNT, vertex_data,
-        element_count, element_data,
+        vertex_data, FLAG_VERTEX_COUNT,
+        element_data, element_count,
         GL_STREAM_DRAW
     );
 
@@ -146,33 +145,33 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
     return vertex_data;
 }
 
-void init_background_mesh(struct flag_mesh *out_mesh)
+#define FLAGPOLE_TRUCK_TOP            0.5f
+#define FLAGPOLE_TRUCK_CROWN          0.41f
+#define FLAGPOLE_TRUCK_BOTTOM         0.38f
+#define FLAGPOLE_SHAFT_TOP            0.3775f
+#define FLAGPOLE_SHAFT_BOTTOM        -2.00f
+#define FLAGPOLE_TRUCK_CROWN_RADIUS   0.020f
+#define FLAGPOLE_TRUCK_BOTTOM_RADIUS  0.015f
+#define FLAGPOLE_SHAFT_RADIUS         0.010f
+
+static void init_background_mesh(struct flag_mesh *out_mesh)
 {
     static const GLsizei FLAGPOLE_RES = 16;
-    static const GLfloat
-        FLAGPOLE_TRUCK_TOP    =  0.5f,
-        FLAGPOLE_TRUCK_CROWN  =  0.41f,
-        FLAGPOLE_TRUCK_BOTTOM =  0.38f,
-        FLAGPOLE_SHAFT_TOP    =  0.3775f,
-        FLAGPOLE_SHAFT_BOTTOM = -2.00f,
-        FLAGPOLE_TRUCK_CROWN_RADIUS  = 0.020f,
-        FLAGPOLE_TRUCK_BOTTOM_RADIUS = 0.015f,
-        FLAGPOLE_SHAFT_RADIUS        = 0.010f,
-        FLAGPOLE_AXIS_XZ[2] = { -FLAGPOLE_SHAFT_RADIUS, 0.0f };
+    GLfloat FLAGPOLE_AXIS_XZ[2] = { -FLAGPOLE_SHAFT_RADIUS, 0.0f };
 
-    static const GLfloat
+    GLfloat
         GROUND_LO[3] = { -2.0f, FLAGPOLE_SHAFT_BOTTOM, -3.0f },
         GROUND_HI[3] = {  4.0f, FLAGPOLE_SHAFT_BOTTOM,  3.0f },
         WALL_LO[3] = { GROUND_LO[0], FLAGPOLE_SHAFT_BOTTOM, GROUND_HI[2] },
-        WALL_HI[3] = { GROUND_HI[0], 1.0f, GROUND_HI[2] },
+        WALL_HI[3] = { GROUND_HI[0], 1.0f, GROUND_HI[2] };
 
-    static const GLfloat
+    static GLfloat
         TEX_FLAGPOLE_LO[2] = { 0.0f,    0.0f },
         TEX_FLAGPOLE_HI[2] = { 0.125f,  1.0f },
         TEX_GROUND_LO[2]   = { 0.125f,  0.03125f },
         TEX_GROUND_HI[2]   = { 0.5625f, 0.96875f },
         TEX_WALL_LO[2]   = { 0.5625f, 0.03125f },
-        TEX_WALL_HI[2]   = { 1.0f,    0.96875f },
+        TEX_WALL_HI[2]   = { 1.0f,    0.96875f };
 
 #define _FLAGPOLE_T(y) \
     (TEX_FLAGPOLE_LO[1] \
@@ -180,8 +179,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         * ((y) - FLAGPOLE_TRUCK_TOP)/(FLAGPOLE_SHAFT_BOTTOM - FLAGPOLE_TRUCK_TOP) \
     )
 
-    static const GLfloat
-        theta_step = 2.0f * (float)M_PI / (GLfloat)FLAGPOLE_RES,
+    GLfloat
+        theta_step = 2.0f * (GLfloat)M_PI / (GLfloat)FLAGPOLE_RES,
         s_step = (TEX_FLAGPOLE_HI[0] - TEX_FLAGPOLE_LO[0]) / (GLfloat)FLAGPOLE_RES,
         t_truck_top    = TEX_FLAGPOLE_LO[1],
         t_truck_crown  = _FLAGPOLE_T(FLAGPOLE_TRUCK_CROWN),
@@ -199,9 +198,7 @@ void init_background_mesh(struct flag_mesh *out_mesh)
             + wall_vertex_count
             + ground_vertex_count;
 
-    struct flag_vertex *vertex_data
-        = (flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
-    GLsizei vertex_i = 0, elt_i, i;
+    GLsizei vertex_i = 0, element_i, i;
 
     GLsizei
         flagpole_element_count = 3 * (8 * FLAGPOLE_RES),
@@ -212,9 +209,9 @@ void init_background_mesh(struct flag_mesh *out_mesh)
             + ground_element_count;
 
     struct flag_vertex *vertex_data
-        = (flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
+        = (struct flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
 
-    struct GLushort *element_data
+    GLushort *element_data
         = (GLushort*) malloc(vertex_count * sizeof(GLushort));
 
     vertex_data[0].position[0] = GROUND_LO[0];
@@ -430,7 +427,7 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[vertex_i].normal[1]   = -1.0f;
     vertex_data[vertex_i].normal[2]   =  0.0f;
     vertex_data[vertex_i].normal[3]   =  0.0f;
-    vertex_data[vertex_i].texcoord[0] =  s;
+    vertex_data[vertex_i].texcoord[0] =  0.5f;
     vertex_data[vertex_i].texcoord[1] =  t_shaft_bottom;
     vertex_data[vertex_i].texcoord[2] =  0.0f;
     vertex_data[vertex_i].texcoord[3] =  0.0f;
@@ -515,8 +512,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     
     init_mesh(
         out_mesh,
-        vertex_count, vertex_data,
-        element_count, element_data,
+        vertex_data, vertex_count,
+        element_data, element_count,
         GL_STATIC_DRAW
     );
 
@@ -524,11 +521,12 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     free(vertex_data);
 }
 
-void update_flag_mesh(
+static void update_flag_mesh(
     struct flag_mesh const *mesh,
     struct flag_vertex *vertex_data,
     GLfloat time
 ) {
+    GLsizei s, t, i;
     for (t = 0, i = 0; t < FLAG_Y_RES; ++t)
         for (s = 0; s < FLAG_X_RES; ++s, ++i) {
             GLfloat ss = FLAG_S_STEP * s, tt = FLAG_T_STEP * t;
@@ -540,11 +538,12 @@ void update_flag_mesh(
     glBufferData(
         GL_ARRAY_BUFFER,
         FLAG_VERTEX_COUNT * sizeof(struct flag_vertex),
-        vertex_data
+        vertex_data,
+        GL_STREAM_DRAW
     );
 }
 
-void render_mesh(struct flag_mesh const *mesh)
+static void render_mesh(struct flag_mesh const *mesh)
 {
     glBindTexture(GL_TEXTURE_2D, mesh->texture);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
@@ -666,16 +665,16 @@ static int make_resources(void)
     init_p_matrix(&g_resources.p_matrix);
 
     g_resources.flag_program.uniforms.texture
-        = glGetUniformLocation(program, "texture");
+        = glGetUniformLocation(g_resources.flag_program.program, "texture");
     g_resources.flag_program.uniforms.p_matrix
-        = glGetUniformLocation(program, "p_matrix");
+        = glGetUniformLocation(g_resources.flag_program.program, "p_matrix");
 
     g_resources.flag_program.attributes.position
-        = glGetAttribLocation(program, "position");
+        = glGetAttribLocation(g_resources.flag_program.program, "position");
     g_resources.flag_program.attributes.normal
-        = glGetAttribLocation(program, "normal");
-    g_resources.flag_program.attributes.texture
-        = glGetAttribLocation(program, "texture");
+        = glGetAttribLocation(g_resources.flag_program.program, "normal");
+    g_resources.flag_program.attributes.texcoord
+        = glGetAttribLocation(g_resources.flag_program.program, "texcoord");
 }
 
 static void update(void)
@@ -688,7 +687,7 @@ static void update(void)
 
 static void render(void)
 {
-    glUseProgram(program);
+    glUseProgram(g_resources.flag_program.program);
 
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(g_resources.flag_program.uniforms.texture, 0);
@@ -701,7 +700,7 @@ static void render(void)
 
     glEnableVertexAttribArray(g_resources.flag_program.attributes.position);
     glEnableVertexAttribArray(g_resources.flag_program.attributes.normal);
-    glEnableVertexAttribArray(g_resources.flag_program.attributes.texture);
+    glEnableVertexAttribArray(g_resources.flag_program.attributes.texcoord);
 
     glVertexAttribPointer(
         g_resources.flag_program.attributes.position,
@@ -724,11 +723,11 @@ static void render(void)
 
     glDisableVertexAttribArray(g_resources.flag_program.attributes.position);
     glDisableVertexAttribArray(g_resources.flag_program.attributes.normal);
-    glDisableVertexAttribArray(g_resources.flag_program.attributes.texture);
+    glDisableVertexAttribArray(g_resources.flag_program.attributes.texcoord);
     glutSwapBuffers();
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
