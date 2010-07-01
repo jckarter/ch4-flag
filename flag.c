@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
+#include "util.h"
 
 struct flag_mesh {
     GLuint vertex_buffer, element_buffer;
@@ -643,6 +644,28 @@ static void init_gl_state(void)
     glEnable(GL_DEPTH_TEST);
 }
 
+#define PROJECTION_FOV_RATIO 0.7f
+#define PROJECTION_NEAR_PLANE 0.7f
+#define PROJECTION_FAR_PLANE 0.7f
+
+static void init_p_matrix(GLfloat *matrix, int w, int h)
+{
+    GLfloat wf = (GLfloat)w, hf = (GLfloat)h;
+    GLfloat
+        r_xy_factor = PROJECTION_NEAR_PLANE*FOV_RATIO/fmin(wf, hf),
+        r_x = wf*r_xy_factor, r_y = hf*r_xy_factor,
+        r_zw_factor = 1.0f/(PROJECTION_FAR_PLANE - PROJECTION_NEAR_PLANE),
+        r_z = (PROJECTION_NEAR_PLANE + PROJECTION_FAR_PLANE)*r_zw_factor,
+        r_w = -2.0f*PROJECTION_NEAR_PLANE*PROJECTION_FAR_PLANE*r_zw_factor;
+
+    matrix[ 0] = r_x;  matrix[ 1] = 0.0f; matrix[ 2] = 0.0f; matrix[ 3] = 0.0f;
+    matrix[ 4] = 0.0f; matrix[ 5] = r_y;  matrix[ 6] = 0.0f; matrix[ 7] = 0.0f;
+    matrix[ 8] = 0.0f; matrix[ 9] = 0.0f; matrix[10] = r_z;  matrix[11] = 1.0f;
+    matrix[12] = 0.0f; matrix[13] = 0.0f; matrix[14] = r_w;  matrix[15] = 0.0f;
+
+    // XXX apply translation
+}
+
 static int make_resources(void)
 {
     g_resources.flag_vertex_array = init_flag_mesh(&g_resources.flag);
@@ -662,7 +685,8 @@ static int make_resources(void)
     );
 
     // XXX error checking
-    init_p_matrix(&g_resources.p_matrix);
+
+    init_p_matrix(&g_resources.p_matrix, 640, 480);
 
     g_resources.flag_program.uniforms.texture
         = glGetUniformLocation(g_resources.flag_program.program, "texture");
@@ -675,6 +699,8 @@ static int make_resources(void)
         = glGetAttribLocation(g_resources.flag_program.program, "normal");
     g_resources.flag_program.attributes.texcoord
         = glGetAttribLocation(g_resources.flag_program.program, "texcoord");
+
+    return 1;
 }
 
 static void update(void)
