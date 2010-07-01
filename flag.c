@@ -642,17 +642,18 @@ static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
 static void init_gl_state(void)
 {
     glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 #define PROJECTION_FOV_RATIO 0.7f
-#define PROJECTION_NEAR_PLANE 0.7f
-#define PROJECTION_FAR_PLANE 0.7f
+#define PROJECTION_NEAR_PLANE 0.0625f
+#define PROJECTION_FAR_PLANE 256.0f
 
 static void init_p_matrix(GLfloat *matrix, int w, int h)
 {
     GLfloat wf = (GLfloat)w, hf = (GLfloat)h;
     GLfloat
-        r_xy_factor = PROJECTION_NEAR_PLANE*FOV_RATIO/fmin(wf, hf),
+        r_xy_factor = PROJECTION_NEAR_PLANE*PROJECTION_FOV_RATIO/fmin(wf, hf),
         r_x = wf*r_xy_factor, r_y = hf*r_xy_factor,
         r_zw_factor = 1.0f/(PROJECTION_FAR_PLANE - PROJECTION_NEAR_PLANE),
         r_z = (PROJECTION_NEAR_PLANE + PROJECTION_FAR_PLANE)*r_zw_factor,
@@ -686,7 +687,7 @@ static int make_resources(void)
 
     // XXX error checking
 
-    init_p_matrix(&g_resources.p_matrix, 640, 480);
+    init_p_matrix(g_resources.p_matrix, 640, 480);
 
     g_resources.flag_program.uniforms.texture
         = glGetUniformLocation(g_resources.flag_program.program, "texture");
@@ -713,6 +714,8 @@ static void update(void)
 
 static void render(void)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+
     glUseProgram(g_resources.flag_program.program);
 
     glActiveTexture(GL_TEXTURE0);
