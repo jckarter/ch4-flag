@@ -10,6 +10,11 @@
 #include <stdio.h>
 #include "meshes.h"
 
+// TODO specular
+// TODO resize background to fill screen
+// TODO angle camera downward
+// TODO real textures
+
 void init_mesh(
     struct flag_mesh *out_mesh,
     struct flag_vertex const *vertex_data, GLsizei vertex_count,
@@ -140,10 +145,10 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     GLfloat FLAGPOLE_AXIS_XZ[2] = { -FLAGPOLE_SHAFT_RADIUS, 0.0f };
 
     GLfloat
-        GROUND_LO[3] = { -2.0f, FLAGPOLE_SHAFT_BOTTOM, -3.0f },
-        GROUND_HI[3] = {  4.0f, FLAGPOLE_SHAFT_BOTTOM,  3.0f },
+        GROUND_LO[3] = { -3.5f, FLAGPOLE_SHAFT_BOTTOM, -1.0f },
+        GROUND_HI[3] = {  4.5f, FLAGPOLE_SHAFT_BOTTOM,  3.0f },
         WALL_LO[3] = { GROUND_LO[0], FLAGPOLE_SHAFT_BOTTOM, GROUND_HI[2] },
-        WALL_HI[3] = { GROUND_HI[0], 1.0f, GROUND_HI[2] };
+        WALL_HI[3] = { GROUND_HI[0], 4.0f, GROUND_HI[2] };
 
     static GLfloat
         TEX_FLAGPOLE_LO[2] = { 0.0f,    0.0f },
@@ -321,7 +326,6 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].position[2]
             = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_CROWN_RADIUS*sn;
         vertex_data[vertex_i].position[3] = 1.0f;
-        // XXX normal
         vertex_data[vertex_i].normal[0]   = cs;
         vertex_data[vertex_i].normal[1]   = 0.0f;
         vertex_data[vertex_i].normal[2]   = sn;
@@ -338,10 +342,9 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].position[2]
             = FLAGPOLE_AXIS_XZ[1] + FLAGPOLE_TRUCK_BOTTOM_RADIUS*sn;
         vertex_data[vertex_i].position[3] = 1.0f;
-        // XXX normal
-        vertex_data[vertex_i].normal[0]   = cs;
-        vertex_data[vertex_i].normal[1]   = 0.0f;
-        vertex_data[vertex_i].normal[2]   = sn;
+        vertex_data[vertex_i].normal[0]   = cs*sqrtf(15.0f/16.0f);
+        vertex_data[vertex_i].normal[1]   = -0.25f;
+        vertex_data[vertex_i].normal[2]   = sn*sqrtf(15.0f/16.0f);
         vertex_data[vertex_i].normal[3]   = 0.0f;
         vertex_data[vertex_i].texcoord[0] = s;
         vertex_data[vertex_i].texcoord[1] = t_truck_bottom;
