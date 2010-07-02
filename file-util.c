@@ -3,10 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*
- * Boring, non-OpenGL-related utility functions
- */
-
 void *file_contents(const char *filename, GLint *length)
 {
     FILE *f = fopen(filename, "r");
