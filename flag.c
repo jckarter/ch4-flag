@@ -24,7 +24,7 @@ static struct {
         } uniforms;
 
         struct {
-            GLint position, normal, texcoord;
+            GLint position, normal, texcoord, specular;
         } attributes;
     } flag_program;
 
@@ -80,6 +80,11 @@ void render_mesh(struct flag_mesh const *mesh)
         2, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
         (void*)offsetof(struct flag_vertex, texcoord)
     );
+    glVertexAttribPointer(
+        g_resources.flag_program.attributes.specular,
+        1, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
+        (void*)offsetof(struct flag_vertex, specular)
+    );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer);
     glDrawElements(GL_TRIANGLES, mesh->element_count, GL_UNSIGNED_SHORT, (void*)0);
@@ -118,6 +123,8 @@ static int make_resources(void)
         = glGetAttribLocation(g_resources.flag_program.program, "normal");
     g_resources.flag_program.attributes.texcoord
         = glGetAttribLocation(g_resources.flag_program.program, "texcoord");
+    g_resources.flag_program.attributes.specular
+        = glGetAttribLocation(g_resources.flag_program.program, "specular");
 
     return 1;
 }
@@ -149,6 +156,7 @@ static void render(void)
     glEnableVertexAttribArray(g_resources.flag_program.attributes.position);
     glEnableVertexAttribArray(g_resources.flag_program.attributes.normal);
     glEnableVertexAttribArray(g_resources.flag_program.attributes.texcoord);
+    glEnableVertexAttribArray(g_resources.flag_program.attributes.specular);
 
     render_mesh(&g_resources.flag);
     render_mesh(&g_resources.background);
@@ -156,6 +164,7 @@ static void render(void)
     glDisableVertexAttribArray(g_resources.flag_program.attributes.position);
     glDisableVertexAttribArray(g_resources.flag_program.attributes.normal);
     glDisableVertexAttribArray(g_resources.flag_program.attributes.texcoord);
+    glDisableVertexAttribArray(g_resources.flag_program.attributes.specular);
     glutSwapBuffers();
 }
 

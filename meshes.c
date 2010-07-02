@@ -11,8 +11,8 @@
 #include "meshes.h"
 
 // TODO specular
-// TODO resize background to fill screen
-// TODO angle camera downward
+// TODO handle window resize
+// TODO angle camera downward, do modelview in C
 // TODO real textures
 
 void init_mesh(
@@ -105,8 +105,8 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 
             vertex_data[i].texcoord[0] = ss;
             vertex_data[i].texcoord[1] = tt;
-            vertex_data[i].texcoord[2] = 0.0f;
-            vertex_data[i].texcoord[3] = 0.0f;
+            vertex_data[i].specular    = 0.0f;
+            vertex_data[i]._pad_       = 0.0f;
         }
 
     for (t = 0, i = 0, index = 0; t < FLAG_Y_RES - 1; ++t, ++index)
@@ -138,6 +138,7 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 #define FLAGPOLE_TRUCK_CROWN_RADIUS   0.020f
 #define FLAGPOLE_TRUCK_BOTTOM_RADIUS  0.015f
 #define FLAGPOLE_SHAFT_RADIUS         0.010f
+#define FLAGPOLE_SPECULAR             7.0f
 
 void init_background_mesh(struct flag_mesh *out_mesh)
 {
@@ -209,8 +210,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[0].normal[3]   = 0.0f;
     vertex_data[0].texcoord[0] = TEX_GROUND_LO[0];
     vertex_data[0].texcoord[1] = TEX_GROUND_LO[1];
-    vertex_data[0].texcoord[2] = 0.0f;
-    vertex_data[0].texcoord[3] = 0.0f;
+    vertex_data[0].specular    = 0.0f;
+    vertex_data[0]._pad_       = 0.0f;
 
     vertex_data[1].position[0] = GROUND_HI[0];
     vertex_data[1].position[1] = GROUND_LO[1];
@@ -222,8 +223,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[1].normal[3]   = 0.0f;
     vertex_data[1].texcoord[0] = TEX_GROUND_HI[0];
     vertex_data[1].texcoord[1] = TEX_GROUND_LO[1];
-    vertex_data[1].texcoord[2] = 0.0f;
-    vertex_data[1].texcoord[3] = 0.0f;
+    vertex_data[1].specular    = 0.0f;
+    vertex_data[1]._pad_       = 0.0f;
 
     vertex_data[2].position[0] = GROUND_HI[0];
     vertex_data[2].position[1] = GROUND_LO[1];
@@ -235,8 +236,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[2].normal[3]   = 0.0f;
     vertex_data[2].texcoord[0] = TEX_GROUND_HI[0];
     vertex_data[2].texcoord[1] = TEX_GROUND_HI[1];
-    vertex_data[2].texcoord[2] = 0.0f;
-    vertex_data[2].texcoord[3] = 0.0f;
+    vertex_data[2].specular    = 0.0f;
+    vertex_data[2]._pad_       = 0.0f;
 
     vertex_data[3].position[0] = GROUND_LO[0];
     vertex_data[3].position[1] = GROUND_LO[1];
@@ -248,8 +249,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[3].normal[3]   = 0.0f;
     vertex_data[3].texcoord[0] = TEX_GROUND_LO[0];
     vertex_data[3].texcoord[1] = TEX_GROUND_HI[1];
-    vertex_data[3].texcoord[2] = 0.0f;
-    vertex_data[3].texcoord[3] = 0.0f;
+    vertex_data[3].specular    = 0.0f;
+    vertex_data[3]._pad_       = 0.0f;
 
     vertex_data[4].position[0] = WALL_LO[0];
     vertex_data[4].position[1] = WALL_LO[1];
@@ -261,8 +262,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[4].normal[3]   = 0.0f;
     vertex_data[4].texcoord[0] = TEX_WALL_LO[0];
     vertex_data[4].texcoord[1] = TEX_WALL_LO[1];
-    vertex_data[4].texcoord[2] = 0.0f;
-    vertex_data[4].texcoord[3] = 0.0f;
+    vertex_data[4].specular    = 0.0f;
+    vertex_data[4]._pad_       = 0.0f;
 
     vertex_data[5].position[0] = WALL_HI[0];
     vertex_data[5].position[1] = WALL_LO[1];
@@ -274,8 +275,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[5].normal[3]   = 0.0f;
     vertex_data[5].texcoord[0] = TEX_WALL_HI[0];
     vertex_data[5].texcoord[1] = TEX_WALL_LO[1];
-    vertex_data[5].texcoord[2] = 0.0f;
-    vertex_data[5].texcoord[3] = 0.0f;
+    vertex_data[5].specular    = 0.0f;
+    vertex_data[5]._pad_       = 0.0f;
 
     vertex_data[6].position[0] = WALL_HI[0];
     vertex_data[6].position[1] = WALL_HI[1];
@@ -287,8 +288,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[6].normal[3]   = 0.0f;
     vertex_data[6].texcoord[0] = TEX_WALL_HI[0];
     vertex_data[6].texcoord[1] = TEX_WALL_HI[1];
-    vertex_data[6].texcoord[2] = 0.0f;
-    vertex_data[6].texcoord[3] = 0.0f;
+    vertex_data[6].specular    = 0.0f;
+    vertex_data[6]._pad_       = 0.0f;
 
     vertex_data[7].position[0] = WALL_LO[0];
     vertex_data[7].position[1] = WALL_HI[1];
@@ -300,8 +301,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[7].normal[3]   = 0.0f;
     vertex_data[7].texcoord[0] = TEX_WALL_LO[0];
     vertex_data[7].texcoord[1] = TEX_WALL_HI[1];
-    vertex_data[7].texcoord[2] = 0.0f;
-    vertex_data[7].texcoord[3] = 0.0f;
+    vertex_data[7].specular    = 0.0f;
+    vertex_data[7]._pad_       = 0.0f;
 
     vertex_data[8].position[0] = FLAGPOLE_AXIS_XZ[0];
     vertex_data[8].position[1] = FLAGPOLE_TRUCK_TOP;
@@ -313,8 +314,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[8].normal[3]   = 0.0f;
     vertex_data[8].texcoord[0] = TEX_FLAGPOLE_LO[0];
     vertex_data[8].texcoord[1] = t_truck_top;
-    vertex_data[8].texcoord[2] = 0.0f;
-    vertex_data[8].texcoord[3] = 0.0f;
+    vertex_data[8].specular    = FLAGPOLE_SPECULAR;
+    vertex_data[8]._pad_       = 0.0f;
 
     for (i = 0, vertex_i = 9; i < FLAGPOLE_RES; ++i) {
         float sn = sinf(theta_step * (float)i), cs = cosf(theta_step * (float)i);
@@ -332,8 +333,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].normal[3]   = 0.0f;
         vertex_data[vertex_i].texcoord[0] = s;
         vertex_data[vertex_i].texcoord[1] = t_truck_crown;
-        vertex_data[vertex_i].texcoord[2] = 0.0f;
-        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        vertex_data[vertex_i].specular    = FLAGPOLE_SPECULAR;
+        vertex_data[vertex_i]._pad_       = 0.0f;
         ++vertex_i;
 
         vertex_data[vertex_i].position[0]
@@ -348,8 +349,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].normal[3]   = 0.0f;
         vertex_data[vertex_i].texcoord[0] = s;
         vertex_data[vertex_i].texcoord[1] = t_truck_bottom;
-        vertex_data[vertex_i].texcoord[2] = 0.0f;
-        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        vertex_data[vertex_i].specular    = FLAGPOLE_SPECULAR;
+        vertex_data[vertex_i]._pad_       = 0.0f;
         ++vertex_i;
 
         vertex_data[vertex_i].position[0]
@@ -364,8 +365,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].normal[3]   = 0.0f;
         vertex_data[vertex_i].texcoord[0] = s;
         vertex_data[vertex_i].texcoord[1] = t_shaft_top;
-        vertex_data[vertex_i].texcoord[2] = 0.0f;
-        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        vertex_data[vertex_i].specular    = FLAGPOLE_SPECULAR;
+        vertex_data[vertex_i]._pad_       = 0.0f;
         ++vertex_i;
 
         vertex_data[vertex_i].position[0]
@@ -380,8 +381,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].normal[3]   = 0.0f;
         vertex_data[vertex_i].texcoord[0] = s;
         vertex_data[vertex_i].texcoord[1] = t_shaft_bottom;
-        vertex_data[vertex_i].texcoord[2] = 0.0f;
-        vertex_data[vertex_i].texcoord[3] = 0.0f;
+        vertex_data[vertex_i].specular    = FLAGPOLE_SPECULAR;
+        vertex_data[vertex_i]._pad_       = 0.0f;
         ++vertex_i;
 
         vertex_data[vertex_i].position[0]
@@ -396,8 +397,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         vertex_data[vertex_i].normal[3]   =  0.0f;
         vertex_data[vertex_i].texcoord[0] =  s;
         vertex_data[vertex_i].texcoord[1] =  t_shaft_bottom;
-        vertex_data[vertex_i].texcoord[2] =  0.0f;
-        vertex_data[vertex_i].texcoord[3] =  0.0f;
+        vertex_data[vertex_i].specular    =  FLAGPOLE_SPECULAR;
+        vertex_data[vertex_i]._pad_       =  0.0f;
         ++vertex_i;
     }
     vertex_data[vertex_i].position[0]
@@ -412,8 +413,8 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[vertex_i].normal[3]   =  0.0f;
     vertex_data[vertex_i].texcoord[0] =  0.5f;
     vertex_data[vertex_i].texcoord[1] =  t_shaft_bottom;
-    vertex_data[vertex_i].texcoord[2] =  0.0f;
-    vertex_data[vertex_i].texcoord[3] =  0.0f;
+    vertex_data[vertex_i].specular    =  FLAGPOLE_SPECULAR;
+    vertex_data[vertex_i]._pad_       =  0.0f;
 
     element_i = 0;
 

@@ -8,7 +8,9 @@ struct flag_mesh {
 struct flag_vertex {
     float position[4];
     float normal[4];
-    float texcoord[4];
+    float texcoord[2];
+    float specular;
+    float _pad_;
 };
 
 void init_mesh(
