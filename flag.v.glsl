@@ -11,7 +11,7 @@ varying vec3 frag_position, frag_normal;
 varying vec2 frag_texcoord;
 varying float frag_specular;
 
-const vec3 eye = vec3(0.5, 0.0, -1.0);
+const vec3 eye = vec3(0.5, -0.25, -1.25);
 
 void main()
 {

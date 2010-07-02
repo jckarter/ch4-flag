@@ -10,10 +10,7 @@
 #include <stdio.h>
 #include "meshes.h"
 
-// TODO specular
 // TODO handle window resize
-// TODO angle camera downward, do modelview in C
-// TODO real textures
 
 void init_mesh(
     struct flag_mesh *out_mesh,
@@ -46,14 +43,14 @@ static void calculate_flag_vertex(
     struct flag_vertex *v,
     GLfloat s, GLfloat t, GLfloat time
 ) {
-    v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - s)*t*(t-1.0f);
+    v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - 0.5f*s)*t*(t-1.0f);
     v->position[1] = 0.75f*t - 0.375f;
     v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)));
     v->position[3] = 0.0f;
 
     GLfloat
         sgrad[3] = {
-            1.0f + (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f),
+            1.0f + 0.5f*(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f),
             0.0f,
             0.125f*(
                 sinf(1.5f*(GLfloat)M_PI*(time + s)) 
@@ -134,7 +131,7 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
 #define FLAGPOLE_TRUCK_CROWN          0.41f
 #define FLAGPOLE_TRUCK_BOTTOM         0.38f
 #define FLAGPOLE_SHAFT_TOP            0.3775f
-#define FLAGPOLE_SHAFT_BOTTOM        -2.00f
+#define FLAGPOLE_SHAFT_BOTTOM        -1.0f
 #define FLAGPOLE_TRUCK_TOP_RADIUS     0.005f
 #define FLAGPOLE_TRUCK_CROWN_RADIUS   0.020f
 #define FLAGPOLE_TRUCK_BOTTOM_RADIUS  0.015f
@@ -150,15 +147,15 @@ void init_background_mesh(struct flag_mesh *out_mesh)
         GROUND_LO[3] = { -3.5f, FLAGPOLE_SHAFT_BOTTOM, -1.0f },
         GROUND_HI[3] = {  4.5f, FLAGPOLE_SHAFT_BOTTOM,  3.0f },
         WALL_LO[3] = { GROUND_LO[0], FLAGPOLE_SHAFT_BOTTOM, GROUND_HI[2] },
-        WALL_HI[3] = { GROUND_HI[0], 4.0f, GROUND_HI[2] };
+        WALL_HI[3] = { GROUND_HI[0], 5.0f, GROUND_HI[2] };
 
     static GLfloat
         TEX_FLAGPOLE_LO[2] = { 0.0f,    0.0f },
-        TEX_FLAGPOLE_HI[2] = { 0.125f,  1.0f },
-        TEX_GROUND_LO[2]   = { 0.125f,  0.03125f },
-        TEX_GROUND_HI[2]   = { 0.5625f, 0.96875f },
-        TEX_WALL_LO[2]   = { 0.5625f, 0.03125f },
-        TEX_WALL_HI[2]   = { 1.0f,    0.96875f };
+        TEX_FLAGPOLE_HI[2] = { 0.03125f,  1.0f },
+        TEX_GROUND_LO[2]   = { 0.03125f,  0.0078125f },
+        TEX_GROUND_HI[2]   = { 0.515625f, 0.9921875f },
+        TEX_WALL_LO[2]     = { 0.515625f, 0.0078125f },
+        TEX_WALL_HI[2]     = { 1.0f,      0.9921875f };
 
 #define _FLAGPOLE_T(y) \
     (TEX_FLAGPOLE_LO[1] \
