@@ -49,6 +49,7 @@ static void init_mesh(
 ) {
     glGenBuffers(1, &out_mesh->vertex_buffer);
     glGenBuffers(1, &out_mesh->element_buffer);
+    out_mesh->element_count = element_count;
 
     glBindBuffer(GL_ARRAY_BUFFER, out_mesh->vertex_buffer);
     glBufferData(
@@ -58,7 +59,7 @@ static void init_mesh(
         hint
     );
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, out_mesh->vertex_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, out_mesh->element_buffer);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
         element_count * sizeof(GLushort),
@@ -71,30 +72,39 @@ static void calculate_flag_vertex(
     struct flag_vertex *v,
     GLfloat s, GLfloat t, GLfloat time
 ) {
-    v->position[0] = s - 0.125f*(1.0f - s)*t*(t-1.0f)*sinf(1.5f*(GLfloat)M_PI*time);
+    v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - s)*t*(t-1.0f);
     v->position[1] = 0.75f*t - 0.375f;
-    v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)) - t*(t-1.0f));
+    v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)));
     v->position[3] = 0.0f;
 
     GLfloat
         sgrad[3] = {
-            1.0f + 0.125f*t*(t-1.0f)*sinf(1.5f*(float)M_PI*time),
+            1.0f + (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f),
             0.0f,
             0.125f*(
-                sinf(1.5f*(GLfloat)M_PI*(time + s))
-                + s*cosf(1.5f*(GLfloat)M_PI*(time + s))*1.5f*(GLfloat)M_PI
+                sinf(1.5f*(GLfloat)M_PI*(time + s)) 
+                + s*cosf(1.5f*(GLfloat)M_PI*(time + s))*(1.5f*(GLfloat)M_PI)
             )
         },
         tgrad[3] = {
-            -0.125f*(1.0f - s)*(2.0f*t - 1.0f)*sinf(1.5f*(GLfloat)M_PI*time),
+            -(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - s)*(2.0f*t - 1.0f),
             0.75f,
-            0.25f*t - 0.125f
+            0.0f
         };
 
-    v->normal[0] = sgrad[1] * tgrad[2] - sgrad[2] * tgrad[1];
-    v->normal[1] = sgrad[2] * tgrad[0] - sgrad[0] * tgrad[2];
-    v->normal[2] = sgrad[0] * tgrad[1] - sgrad[1] * tgrad[0];
+    v->normal[0] = tgrad[1]*sgrad[2] - tgrad[2]*sgrad[1];
+    v->normal[1] = tgrad[2]*sgrad[0] - tgrad[0]*sgrad[2];
+    v->normal[2] = tgrad[0]*sgrad[1] - tgrad[1]*sgrad[0];
     v->normal[3] = 0.0f;
+
+    GLfloat rlen = 1.0f/sqrtf(
+        v->normal[0] * v->normal[0]
+        + v->normal[1] * v->normal[1]
+        + v->normal[2] * v->normal[2]
+    );
+    v->normal[0] *= rlen;
+    v->normal[1] *= rlen;
+    v->normal[2] *= rlen;
 }
 
 #define FLAG_X_RES 100
@@ -213,7 +223,7 @@ static void init_background_mesh(struct flag_mesh *out_mesh)
         = (struct flag_vertex*) malloc(vertex_count * sizeof(struct flag_vertex));
 
     GLushort *element_data
-        = (GLushort*) malloc(vertex_count * sizeof(GLushort));
+        = (GLushort*) malloc(element_count * sizeof(GLushort));
 
     vertex_data[0].position[0] = GROUND_LO[0];
     vertex_data[0].position[1] = GROUND_LO[1];
@@ -433,6 +443,9 @@ static void init_background_mesh(struct flag_mesh *out_mesh)
     vertex_data[vertex_i].texcoord[2] =  0.0f;
     vertex_data[vertex_i].texcoord[3] =  0.0f;
 
+#include <assert.h>
+    assert(vertex_i + 1 == vertex_count);
+
     element_i = 0;
 
     element_data[element_i++] = 0;
@@ -510,6 +523,8 @@ static void init_background_mesh(struct flag_mesh *out_mesh)
     element_data[element_i++] = 9 + 5*(FLAGPOLE_RES-1) + 4;
     element_data[element_i++] = 9 + 4;
     element_data[element_i++] = vertex_i;
+
+    assert(element_i == element_count);
     
     init_mesh(
         out_mesh,
@@ -532,7 +547,7 @@ static void update_flag_mesh(
         for (s = 0; s < FLAG_X_RES; ++s, ++i) {
             GLfloat ss = FLAG_S_STEP * s, tt = FLAG_T_STEP * t;
 
-            calculate_flag_vertex(&vertex_data[i], ss, tt, 0.0f);
+            calculate_flag_vertex(&vertex_data[i], ss, tt, time);
         }
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
@@ -547,7 +562,24 @@ static void update_flag_mesh(
 static void render_mesh(struct flag_mesh const *mesh)
 {
     glBindTexture(GL_TEXTURE_2D, mesh->texture);
+
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
+    glVertexAttribPointer(
+        g_resources.flag_program.attributes.position,
+        3, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
+        (void*)offsetof(struct flag_vertex, position)
+    );
+    glVertexAttribPointer(
+        g_resources.flag_program.attributes.normal,
+        3, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
+        (void*)offsetof(struct flag_vertex, normal)
+    );
+    glVertexAttribPointer(
+        g_resources.flag_program.attributes.texcoord,
+        2, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
+        (void*)offsetof(struct flag_vertex, texcoord)
+    );
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->element_buffer);
     glDrawElements(GL_TRIANGLES, mesh->element_count, GL_UNSIGNED_SHORT, (void*)0);
 }
@@ -653,8 +685,9 @@ static void init_p_matrix(GLfloat *matrix, int w, int h)
 {
     GLfloat wf = (GLfloat)w, hf = (GLfloat)h;
     GLfloat
-        r_xy_factor = PROJECTION_NEAR_PLANE*PROJECTION_FOV_RATIO/fmin(wf, hf),
-        r_x = wf*r_xy_factor, r_y = hf*r_xy_factor,
+        r_xy_factor = fminf(wf, hf) * 1.0f/PROJECTION_FOV_RATIO,
+        r_x = r_xy_factor/wf,
+        r_y = r_xy_factor/hf,
         r_zw_factor = 1.0f/(PROJECTION_FAR_PLANE - PROJECTION_NEAR_PLANE),
         r_z = (PROJECTION_NEAR_PLANE + PROJECTION_FAR_PLANE)*r_zw_factor,
         r_w = -2.0f*PROJECTION_NEAR_PLANE*PROJECTION_FAR_PLANE*r_zw_factor;
@@ -710,6 +743,7 @@ static void update(void)
     GLfloat seconds = (GLfloat)milliseconds * (1.0f/1000.0f);
 
     update_flag_mesh(&g_resources.flag, g_resources.flag_vertex_array, seconds);
+    glutPostRedisplay();
 }
 
 static void render(void)
@@ -730,22 +764,6 @@ static void render(void)
     glEnableVertexAttribArray(g_resources.flag_program.attributes.position);
     glEnableVertexAttribArray(g_resources.flag_program.attributes.normal);
     glEnableVertexAttribArray(g_resources.flag_program.attributes.texcoord);
-
-    glVertexAttribPointer(
-        g_resources.flag_program.attributes.position,
-        3, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
-        (void*)offsetof(struct flag_vertex, position)
-    );
-    glVertexAttribPointer(
-        g_resources.flag_program.attributes.normal,
-        3, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
-        (void*)offsetof(struct flag_vertex, normal)
-    );
-    glVertexAttribPointer(
-        g_resources.flag_program.attributes.texcoord,
-        2, GL_FLOAT, GL_FALSE, sizeof(struct flag_vertex),
-        (void*)offsetof(struct flag_vertex, texcoord)
-    );
 
     render_mesh(&g_resources.flag);
     render_mesh(&g_resources.background);
