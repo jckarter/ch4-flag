@@ -8,8 +8,8 @@ varying vec2 frag_texcoord;
 varying float frag_specular;
 
 const vec3 light_direction = vec3(0.408248, -0.816497, 0.408248);
-const vec4 light_diffuse = vec4(0.8, 0.8, 0.8, 0.8);
-const vec4 light_ambient = vec4(0.2, 0.2, 0.2, 0.2);
+const vec4 light_diffuse = vec4(0.8, 0.8, 0.8, 0.0);
+const vec4 light_ambient = vec4(0.2, 0.2, 0.2, 1.0);
 const vec4 light_specular = vec4(1.0, 1.0, 1.0, 1.0);
 
 void main()
