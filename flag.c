@@ -112,30 +112,31 @@ static int make_resources(void)
     g_resources.flag.texture = make_texture("flag.tga");
     g_resources.background.texture = make_texture("background.tga");
 
+    if (g_resources.flag.texture == 0 || g_resources.background.texture == 0)
+        return 0;
+
     g_resources.flag_program.vertex_shader
         = make_shader(GL_VERTEX_SHADER, "flag.v.glsl");
+    if (g_resources.flag_program.vertex_shader == 0)
+        return 0;
     g_resources.flag_program.fragment_shader
         = make_shader(GL_FRAGMENT_SHADER, "flag.f.glsl");
+    if (g_resources.flag_program.fragment_shader == 0)
+        return 0;
 
     g_resources.flag_program.program = make_program(
         g_resources.flag_program.vertex_shader,
         g_resources.flag_program.fragment_shader
     );
-
-    // XXX error checking
-
-    update_p_matrix(
-        g_resources.p_matrix,
-        INITIAL_WINDOW_WIDTH,
-        INITIAL_WINDOW_HEIGHT
-    );
-
-    update_mv_matrix(g_resources.mv_matrix);
+    if (g_resources.flag_program.program == 0)
+        return 0;
 
     g_resources.flag_program.uniforms.texture
         = glGetUniformLocation(g_resources.flag_program.program, "texture");
     g_resources.flag_program.uniforms.p_matrix
         = glGetUniformLocation(g_resources.flag_program.program, "p_matrix");
+    g_resources.flag_program.uniforms.mv_matrix
+        = glGetUniformLocation(g_resources.flag_program.program, "mv_matrix");
 
     g_resources.flag_program.attributes.position
         = glGetAttribLocation(g_resources.flag_program.program, "position");
@@ -145,6 +146,13 @@ static int make_resources(void)
         = glGetAttribLocation(g_resources.flag_program.program, "texcoord");
     g_resources.flag_program.attributes.specular
         = glGetAttribLocation(g_resources.flag_program.program, "specular");
+
+    update_p_matrix(
+        g_resources.p_matrix,
+        INITIAL_WINDOW_WIDTH,
+        INITIAL_WINDOW_HEIGHT
+    );
+    update_mv_matrix(g_resources.mv_matrix);
 
     return 1;
 }
