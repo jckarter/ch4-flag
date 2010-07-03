@@ -90,6 +90,9 @@ void render_mesh(struct flag_mesh const *mesh)
     glDrawElements(GL_TRIANGLES, mesh->element_count, GL_UNSIGNED_SHORT, (void*)0);
 }
 
+#define INITIAL_WINDOW_WIDTH  640
+#define INITIAL_WINDOW_HEIGHT 480
+
 static int make_resources(void)
 {
     g_resources.flag_vertex_array = init_flag_mesh(&g_resources.flag);
@@ -110,7 +113,11 @@ static int make_resources(void)
 
     // XXX error checking
 
-    init_p_matrix(g_resources.p_matrix, 640, 480);
+    init_p_matrix(
+        g_resources.p_matrix,
+        INITIAL_WINDOW_WIDTH,
+        INITIAL_WINDOW_HEIGHT
+    );
 
     g_resources.flag_program.uniforms.texture
         = glGetUniformLocation(g_resources.flag_program.program, "texture");
@@ -136,6 +143,12 @@ static void update(void)
 
     update_flag_mesh(&g_resources.flag, g_resources.flag_vertex_array, seconds);
     glutPostRedisplay();
+}
+
+static void reshape(int w, int h)
+{
+    init_p_matrix(g_resources.p_matrix, w, h);
+    glViewport(0, 0, w, h);
 }
 
 static void render(void)
@@ -172,10 +185,11 @@ int main(int argc, char* argv[])
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-    glutInitWindowSize(640, 480);
+    glutInitWindowSize(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT);
     glutCreateWindow("Flag");
     glutIdleFunc(&update);
     glutDisplayFunc(&render);
+    glutReshapeFunc(&reshape);
 
     glewInit();
     if (!GLEW_VERSION_2_0) {
