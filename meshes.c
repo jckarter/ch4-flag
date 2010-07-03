@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include "meshes.h"
 
-// TODO handle window resize
-
 void init_mesh(
     struct flag_mesh *out_mesh,
     struct flag_vertex const *vertex_data, GLsizei vertex_count,
@@ -144,10 +142,10 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     GLfloat FLAGPOLE_AXIS_XZ[2] = { -FLAGPOLE_SHAFT_RADIUS, 0.0f };
 
     GLfloat
-        GROUND_LO[3] = { -3.5f, FLAGPOLE_SHAFT_BOTTOM, -1.0f },
-        GROUND_HI[3] = {  4.5f, FLAGPOLE_SHAFT_BOTTOM,  3.0f },
+        GROUND_LO[3] = { -3.0f, FLAGPOLE_SHAFT_BOTTOM, -1.0f },
+        GROUND_HI[3] = {  4.0f, FLAGPOLE_SHAFT_BOTTOM,  2.5f },
         WALL_LO[3] = { GROUND_LO[0], FLAGPOLE_SHAFT_BOTTOM, GROUND_HI[2] },
-        WALL_HI[3] = { GROUND_HI[0], 5.0f, GROUND_HI[2] };
+        WALL_HI[3] = { GROUND_HI[0], FLAGPOLE_SHAFT_BOTTOM + 4.0f, GROUND_HI[2] };
 
     static GLfloat
         TEX_FLAGPOLE_LO[2] = { 0.0f,    0.0f },
