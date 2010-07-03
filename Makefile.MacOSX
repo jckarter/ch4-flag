@@ -1,0 +1,11 @@
+GLEW_INCLUDE = /opt/local/include
+GLEW_LIB = /opt/local/lib
+
+flag: file-util.o gl-util.o meshes.o flag.o
+	gcc -o flag $^ -framework GLUT -framework OpenGL -L$(GLEW_LIB) -lGLEW
+
+.c.o:
+	gcc -c -o $@ $< -I$(GLEW_INCLUDE)
+
+clean:
+	rm -f flag *.o

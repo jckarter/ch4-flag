@@ -1,0 +1,9 @@
+flag.exe: file-util.obj gl-util.obj meshes.obj flag.obj
+	link /nologo /out:flag.exe /SUBSYSTEM:console file-util.obj gl-util.obj meshes.obj flag.obj opengl32.lib glut32.lib glew32.lib
+
+.c.obj:
+	cl /nologo /Fo$@ /c $<
+
+clean:
+	del flag.exe
+        del *.obj
