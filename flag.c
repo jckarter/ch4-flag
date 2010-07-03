@@ -20,7 +20,7 @@ static struct {
         GLuint vertex_shader, fragment_shader, program;
 
         struct {
-            GLint texture, p_matrix;
+            GLint texture, p_matrix, mv_matrix;
         } uniforms;
 
         struct {
@@ -28,7 +28,7 @@ static struct {
         } attributes;
     } flag_program;
 
-    GLfloat p_matrix[16];
+    GLfloat p_matrix[16], mv_matrix[16];
 } g_resources;
 
 static void init_gl_state(void)
@@ -41,7 +41,7 @@ static void init_gl_state(void)
 #define PROJECTION_NEAR_PLANE 0.0625f
 #define PROJECTION_FAR_PLANE 256.0f
 
-static void init_p_matrix(GLfloat *matrix, int w, int h)
+static void update_p_matrix(GLfloat *matrix, int w, int h)
 {
     GLfloat wf = (GLfloat)w, hf = (GLfloat)h;
     GLfloat
@@ -56,11 +56,22 @@ static void init_p_matrix(GLfloat *matrix, int w, int h)
     matrix[ 4] = 0.0f; matrix[ 5] = r_y;  matrix[ 6] = 0.0f; matrix[ 7] = 0.0f;
     matrix[ 8] = 0.0f; matrix[ 9] = 0.0f; matrix[10] = r_z;  matrix[11] = 1.0f;
     matrix[12] = 0.0f; matrix[13] = 0.0f; matrix[14] = r_w;  matrix[15] = 0.0f;
-
-    // XXX apply translation
 }
 
-void render_mesh(struct flag_mesh const *mesh)
+static void update_mv_matrix(GLfloat *matrix)
+{
+    static const GLfloat EYE_POSITION[3] = { 0.5f, -0.25f, -1.25f };
+
+    matrix[ 0] = 1.0f; matrix[ 1] = 0.0f; matrix[ 2] = 0.0f; matrix[ 3] = 0.0f;
+    matrix[ 4] = 0.0f; matrix[ 5] = 1.0f; matrix[ 6] = 0.0f; matrix[ 7] = 0.0f;
+    matrix[ 8] = 0.0f; matrix[ 9] = 0.0f; matrix[10] = 1.0f; matrix[11] = 0.0f;
+    matrix[12] = -EYE_POSITION[0];
+    matrix[13] = -EYE_POSITION[1];
+    matrix[14] = -EYE_POSITION[2];
+    matrix[15] = 1.0f;
+}
+
+static void render_mesh(struct flag_mesh const *mesh)
 {
     glBindTexture(GL_TEXTURE_2D, mesh->texture);
 
@@ -113,11 +124,13 @@ static int make_resources(void)
 
     // XXX error checking
 
-    init_p_matrix(
+    update_p_matrix(
         g_resources.p_matrix,
         INITIAL_WINDOW_WIDTH,
         INITIAL_WINDOW_HEIGHT
     );
+
+    update_mv_matrix(g_resources.mv_matrix);
 
     g_resources.flag_program.uniforms.texture
         = glGetUniformLocation(g_resources.flag_program.program, "texture");
@@ -147,7 +160,7 @@ static void update(void)
 
 static void reshape(int w, int h)
 {
-    init_p_matrix(g_resources.p_matrix, w, h);
+    update_p_matrix(g_resources.p_matrix, w, h);
     glViewport(0, 0, w, h);
 }
 
@@ -164,6 +177,12 @@ static void render(void)
         g_resources.flag_program.uniforms.p_matrix,
         1, GL_FALSE,
         g_resources.p_matrix
+    );
+
+    glUniformMatrix4fv(
+        g_resources.flag_program.uniforms.mv_matrix,
+        1, GL_FALSE,
+        g_resources.mv_matrix
     );
 
     glEnableVertexAttribArray(g_resources.flag_program.attributes.position);
