@@ -1,6 +1,6 @@
 #version 110
 
-uniform mat4 p_matrix;
+uniform mat4 p_matrix, mv_matrix;
 uniform sampler2D texture;
 
 varying vec3 frag_position, frag_normal;
@@ -15,15 +15,14 @@ const vec4 light_specular = vec4(1.0, 1.0, 1.0, 1.0);
 
 void main()
 {
-    vec3 normal = normalize(frag_normal),
+    vec3 light_eye_direction = (mv_matrix * vec4(light_direction, 0.0)).xyz,
+         normal = normalize(frag_normal),
          eye = normalize(frag_position),
-         reflection = reflect(light_direction, normal);
+         reflection = reflect(light_eye_direction, normal);
 
     vec4 color = texture2D(texture, frag_texcoord);
-    float diffuse = max(-dot(normal, light_direction), 0.0);
-    float spec = frag_shininess == 0.0
-        ? 1.0
-        : max(pow(-dot(reflection, eye), frag_shininess), 0.0);
+    float diffuse = max(-dot(normal, light_eye_direction), 0.0);
+    float spec = max(pow(-dot(reflection, eye), frag_shininess), 0.0);
     
     gl_FragColor = spec * frag_specular * light_specular + color * (light_diffuse * diffuse + light_ambient);
 }
