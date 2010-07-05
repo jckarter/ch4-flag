@@ -6,11 +6,11 @@ struct flag_mesh {
 };
 
 struct flag_vertex {
-    float position[4];
-    float normal[4];
-    float texcoord[2];
-    float specular;
-    float _pad_;
+    GLfloat position[4];
+    GLfloat normal[4];
+    GLfloat texcoord[2];
+    GLfloat shininess;
+    GLubyte specular[4];
 };
 
 void init_mesh(
