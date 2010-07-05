@@ -24,5 +24,6 @@ void main()
     float diffuse = max(-dot(normal, light_eye_direction), 0.0);
     float spec = max(pow(-dot(reflection, eye), frag_shininess), 0.0);
     
-    gl_FragColor = spec * frag_specular * light_specular + color * (light_diffuse * diffuse + light_ambient);
+    gl_FragColor = spec * frag_specular * light_specular
+        + color * (light_diffuse * diffuse + light_ambient);
 }
