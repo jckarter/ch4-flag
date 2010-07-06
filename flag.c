@@ -31,6 +31,7 @@ static struct {
 
     GLfloat p_matrix[16], mv_matrix[16];
     GLfloat eye_offset[2];
+    GLsizei window_size[2];
 } g_resources;
 
 static void init_gl_state(void)
@@ -163,6 +164,8 @@ static int make_resources(void)
 
     g_resources.eye_offset[0] = 0.0f;
     g_resources.eye_offset[1] = 0.0f;
+    g_resources.window_size[0] = INITIAL_WINDOW_WIDTH;
+    g_resources.window_size[1] = INITIAL_WINDOW_HEIGHT;
 
     update_p_matrix(
         g_resources.p_matrix,
@@ -185,13 +188,26 @@ static void update(void)
 
 static void drag(int x, int y)
 {
-    g_resources.eye_offset[0] = (x - 320)/640.0f;
-    g_resources.eye_offset[1] = (y - 240)/640.0f;
+    float w = (float)g_resources.window_size[0];
+    float h = (float)g_resources.window_size[1];
+    g_resources.eye_offset[0] = (x - w/2)/w;
+    g_resources.eye_offset[1] = -(y - h/2)/h;
     update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
+}
+
+static void mouse(int button, int state, int x, int y)
+{
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+        g_resources.eye_offset[0] = 0.0f;
+        g_resources.eye_offset[1] = 0.0f;
+        update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
+    }
 }
 
 static void reshape(int w, int h)
 {
+    g_resources.window_size[0] = w;
+    g_resources.window_size[1] = h;
     update_p_matrix(g_resources.p_matrix, w, h);
     glViewport(0, 0, w, h);
 }
@@ -244,6 +260,7 @@ int main(int argc, char* argv[])
     glutDisplayFunc(&render);
     glutReshapeFunc(&reshape);
     glutMotionFunc(&drag);
+    glutMouseFunc(&mouse);
 
     glewInit();
     if (!GLEW_VERSION_2_0) {
