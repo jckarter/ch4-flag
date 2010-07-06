@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "file-util.h"
 #include "gl-util.h"
+#include "vec-util.h"
 #include "meshes.h"
 
 static struct {
@@ -29,6 +30,7 @@ static struct {
     } flag_program;
 
     GLfloat p_matrix[16], mv_matrix[16];
+    GLfloat eye_offset[2];
 } g_resources;
 
 static void init_gl_state(void)
@@ -58,16 +60,16 @@ static void update_p_matrix(GLfloat *matrix, int w, int h)
     matrix[12] = 0.0f; matrix[13] = 0.0f; matrix[14] = r_w;  matrix[15] = 0.0f;
 }
 
-static void update_mv_matrix(GLfloat *matrix)
+static void update_mv_matrix(GLfloat *matrix, GLfloat *eye_offset)
 {
-    static const GLfloat EYE_POSITION[3] = { 0.5f, -0.25f, -1.25f };
+    static const GLfloat BASE_EYE_POSITION[3]  = { 0.5f, -0.25f, -1.25f  };
 
     matrix[ 0] = 1.0f; matrix[ 1] = 0.0f; matrix[ 2] = 0.0f; matrix[ 3] = 0.0f;
     matrix[ 4] = 0.0f; matrix[ 5] = 1.0f; matrix[ 6] = 0.0f; matrix[ 7] = 0.0f;
     matrix[ 8] = 0.0f; matrix[ 9] = 0.0f; matrix[10] = 1.0f; matrix[11] = 0.0f;
-    matrix[12] = -EYE_POSITION[0];
-    matrix[13] = -EYE_POSITION[1];
-    matrix[14] = -EYE_POSITION[2];
+    matrix[12] = -BASE_EYE_POSITION[0] - eye_offset[0];
+    matrix[13] = -BASE_EYE_POSITION[1] - eye_offset[1];
+    matrix[14] = -BASE_EYE_POSITION[2];
     matrix[15] = 1.0f;
 }
 
@@ -159,12 +161,15 @@ static int make_resources(void)
     g_resources.flag_program.attributes.specular
         = glGetAttribLocation(g_resources.flag_program.program, "specular");
 
+    g_resources.eye_offset[0] = 0.0f;
+    g_resources.eye_offset[1] = 0.0f;
+
     update_p_matrix(
         g_resources.p_matrix,
         INITIAL_WINDOW_WIDTH,
         INITIAL_WINDOW_HEIGHT
     );
-    update_mv_matrix(g_resources.mv_matrix);
+    update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
 
     return 1;
 }
@@ -176,6 +181,13 @@ static void update(void)
 
     update_flag_mesh(&g_resources.flag, g_resources.flag_vertex_array, seconds);
     glutPostRedisplay();
+}
+
+static void drag(int x, int y)
+{
+    g_resources.eye_offset[0] = (x - 320)/640.0f;
+    g_resources.eye_offset[1] = (y - 240)/640.0f;
+    update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
 }
 
 static void reshape(int w, int h)
@@ -231,6 +243,7 @@ int main(int argc, char* argv[])
     glutIdleFunc(&update);
     glutDisplayFunc(&render);
     glutReshapeFunc(&reshape);
+    glutMotionFunc(&drag);
 
     glewInit();
     if (!GLEW_VERSION_2_0) {

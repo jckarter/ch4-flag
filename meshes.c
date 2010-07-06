@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "meshes.h"
+#include "vec-util.h"
 
 void init_mesh(
     struct flag_mesh *out_mesh,
@@ -61,19 +62,9 @@ static void calculate_flag_vertex(
             0.0f
         };
 
-    v->normal[0] = tgrad[1]*sgrad[2] - tgrad[2]*sgrad[1];
-    v->normal[1] = tgrad[2]*sgrad[0] - tgrad[0]*sgrad[2];
-    v->normal[2] = tgrad[0]*sgrad[1] - tgrad[1]*sgrad[0];
+    vec_cross(v->normal, tgrad, sgrad);
+    vec_normalize(v->normal);
     v->normal[3] = 0.0f;
-
-    GLfloat rlen = 1.0f/sqrtf(
-        v->normal[0] * v->normal[0]
-        + v->normal[1] * v->normal[1]
-        + v->normal[2] * v->normal[2]
-    );
-    v->normal[0] *= rlen;
-    v->normal[1] *= rlen;
-    v->normal[2] *= rlen;
 }
 
 #define FLAG_X_RES 100
@@ -559,8 +550,15 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     element_data[element_i++] = 9 + 2;
     element_data[element_i++] = 9 + 3;
 
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 3;
+    element_data[element_i++] = 9 + 3;
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 4;
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 4;
+    element_data[element_i++] = 9 + 3;
     element_data[element_i++] = 9 + 4;
+
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 5;
+    element_data[element_i++] = 9 + 5;
     element_data[element_i++] = vertex_i;
 
     init_mesh(
