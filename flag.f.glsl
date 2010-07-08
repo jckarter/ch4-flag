@@ -15,14 +15,14 @@ const vec4 light_specular = vec4(1.0, 1.0, 1.0, 1.0);
 
 void main()
 {
-    vec3 light_eye_direction = (mv_matrix * vec4(light_direction, 0.0)).xyz,
+    vec3 mv_light_direction = (mv_matrix * vec4(light_direction, 0.0)).xyz,
          normal = normalize(frag_normal),
          eye = normalize(frag_position),
-         reflection = reflect(light_eye_direction, normal);
+         reflection = reflect(mv_light_direction, normal);
 
     vec4 frag_diffuse = texture2D(texture, frag_texcoord);
     vec4 diffuse_factor
-        = max(-dot(normal, light_eye_direction), 0.0) * light_diffuse;
+        = max(-dot(normal, mv_light_direction), 0.0) * light_diffuse;
     vec4 ambient_diffuse_factor
         = diffuse_factor + light_ambient;
     vec4 specular_factor
