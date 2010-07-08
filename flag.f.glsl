@@ -20,10 +20,14 @@ void main()
          eye = normalize(frag_position),
          reflection = reflect(light_eye_direction, normal);
 
-    vec4 color = texture2D(texture, frag_texcoord);
-    float diffuse = max(-dot(normal, light_eye_direction), 0.0);
-    float spec = max(pow(-dot(reflection, eye), frag_shininess), 0.0);
+    vec4 frag_diffuse = texture2D(texture, frag_texcoord);
+    vec4 diffuse_factor
+        = max(-dot(normal, light_eye_direction), 0.0) * light_diffuse;
+    vec4 ambient_diffuse_factor
+        = diffuse_factor + light_ambient;
+    vec4 specular_factor
+        = max(pow(-dot(reflection, eye), frag_shininess), 0.0) * light_specular;
     
-    gl_FragColor = spec * frag_specular * light_specular
-        + color * (light_diffuse * diffuse + light_ambient);
+    gl_FragColor = specular_factor * frag_specular
+        + ambient_diffuse_factor * frag_diffuse;
 }
