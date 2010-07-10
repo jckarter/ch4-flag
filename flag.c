@@ -190,8 +190,8 @@ static void drag(int x, int y)
 {
     float w = (float)g_resources.window_size[0];
     float h = (float)g_resources.window_size[1];
-    g_resources.eye_offset[0] = (x - w/2)/w;
-    g_resources.eye_offset[1] = -(y - h/2)/h;
+    g_resources.eye_offset[0] = (float)x/w - 0.5f;
+    g_resources.eye_offset[1] = -(float)y/h + 0.5f;
     update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
 }
 
@@ -214,7 +214,7 @@ static void reshape(int w, int h)
 
 static void render(void)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(g_resources.flag_program.program);
 
