@@ -101,11 +101,11 @@ struct flag_vertex *init_flag_mesh(struct flag_mesh *out_mesh)
     for (t = 0, i = 0, index = 0; t < FLAG_Y_RES - 1; ++t, ++index)
         for (s = 0; s < FLAG_X_RES - 1; ++s, ++index) {
             element_data[i++] = index             ;
-            element_data[i++] = index+FLAG_X_RES  ;
-            element_data[i++] = index           +1;
             element_data[i++] = index           +1;
             element_data[i++] = index+FLAG_X_RES  ;
+            element_data[i++] = index           +1;
             element_data[i++] = index+FLAG_X_RES+1;
+            element_data[i++] = index+FLAG_X_RES  ;
         }
 
     init_mesh(
@@ -489,77 +489,77 @@ void init_background_mesh(struct flag_mesh *out_mesh)
 
     for (i = 0; i < FLAGPOLE_RES - 1; ++i) {
         element_data[element_i++] = 8;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1);
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i;
-
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1);
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 1;
+
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 1;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1);
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 1;
-
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 1;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 1;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 2;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1);
+
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 1;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 2;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 1;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 2;
-
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 2;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 2;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 3;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 1;
+
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 2;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 3;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 2;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 3;
-
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 3;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 3;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 4;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 2;
+
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 3;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 4;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 3;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 4;
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 4;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 3;
 
         element_data[element_i++] = 9 + FLAGPOLE_SLICE*i     + 5;
-        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 5;
         element_data[element_i++] = vertex_i;
+        element_data[element_i++] = 9 + FLAGPOLE_SLICE*(i+1) + 5;
     }
 
     element_data[element_i++] = 8;
-    element_data[element_i++] = 9;
-    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1);
-
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1);
     element_data[element_i++] = 9;
-    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 1;
+
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1);
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 1;
     element_data[element_i++] = 9;
-    element_data[element_i++] = 9 + 1;
-
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 1;
     element_data[element_i++] = 9 + 1;
-    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 2;
+    element_data[element_i++] = 9;
+
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 1;
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 2;
     element_data[element_i++] = 9 + 1;
-    element_data[element_i++] = 9 + 2;
-
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 2;
     element_data[element_i++] = 9 + 2;
-    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 3;
+    element_data[element_i++] = 9 + 1;
+
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 2;
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 3;
     element_data[element_i++] = 9 + 2;
-    element_data[element_i++] = 9 + 3;
-
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 3;
     element_data[element_i++] = 9 + 3;
-    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 4;
+    element_data[element_i++] = 9 + 2;
+
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 3;
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 4;
     element_data[element_i++] = 9 + 3;
+    element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 4;
     element_data[element_i++] = 9 + 4;
+    element_data[element_i++] = 9 + 3;
 
     element_data[element_i++] = 9 + FLAGPOLE_SLICE*(FLAGPOLE_RES-1) + 5;
-    element_data[element_i++] = 9 + 5;
     element_data[element_i++] = vertex_i;
+    element_data[element_i++] = 9 + 5;
 
     init_mesh(
         out_mesh,
