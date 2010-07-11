@@ -42,11 +42,6 @@ static void calculate_flag_vertex(
     struct flag_vertex *v,
     GLfloat s, GLfloat t, GLfloat time
 ) {
-    v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - 0.5f*s)*t*(t-1.0f);
-    v->position[1] = 0.75f*t - 0.375f;
-    v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)));
-    v->position[3] = 0.0f;
-
     GLfloat
         sgrad[3] = {
             1.0f + 0.5f*(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f),
@@ -61,6 +56,11 @@ static void calculate_flag_vertex(
             0.75f,
             0.0f
         };
+
+    v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - 0.5f*s)*t*(t-1.0f);
+    v->position[1] = 0.75f*t - 0.375f;
+    v->position[2] = 0.125f*(s*sinf(1.5f*(GLfloat)M_PI*(time + s)));
+    v->position[3] = 0.0f;
 
     vec_cross(v->normal, tgrad, sgrad);
     vec_normalize(v->normal);
