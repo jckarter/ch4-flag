@@ -118,8 +118,84 @@ static void render_mesh(struct flag_mesh const *mesh)
 #define INITIAL_WINDOW_WIDTH  640
 #define INITIAL_WINDOW_HEIGHT 480
 
+static void enact_flag_program(
+    GLuint vertex_shader,
+    GLuint fragment_shader,
+    GLuint program
+) {
+    g_resources.flag_program.vertex_shader = vertex_shader;
+    g_resources.flag_program.fragment_shader = fragment_shader;
+
+    g_resources.flag_program.program = program;
+
+    g_resources.flag_program.uniforms.texture
+        = glGetUniformLocation(program, "texture");
+    g_resources.flag_program.uniforms.p_matrix
+        = glGetUniformLocation(program, "p_matrix");
+    g_resources.flag_program.uniforms.mv_matrix
+        = glGetUniformLocation(program, "mv_matrix");
+
+    g_resources.flag_program.attributes.position
+        = glGetAttribLocation(program, "position");
+    g_resources.flag_program.attributes.normal
+        = glGetAttribLocation(program, "normal");
+    g_resources.flag_program.attributes.texcoord
+        = glGetAttribLocation(program, "texcoord");
+    g_resources.flag_program.attributes.shininess
+        = glGetAttribLocation(program, "shininess");
+    g_resources.flag_program.attributes.specular
+        = glGetAttribLocation(program, "specular");
+}
+
+static int make_flag_program(
+    GLuint *vertex_shader,
+    GLuint *fragment_shader,
+    GLuint *program
+) {
+    *vertex_shader = make_shader(GL_VERTEX_SHADER, "flag.v.glsl");
+    if (*vertex_shader == 0)
+        return 0;
+    *fragment_shader = make_shader(GL_FRAGMENT_SHADER, "flag.f.glsl");
+    if (*fragment_shader == 0)
+        return 0;
+
+    *program = make_program(*vertex_shader, *fragment_shader);
+    if (*program == 0)
+        return 0;
+
+    return 1;
+}
+
+static void delete_flag_program(void)
+{
+    glDetachShader(
+        g_resources.flag_program.program,
+        g_resources.flag_program.vertex_shader
+    );
+    glDetachShader(
+        g_resources.flag_program.program,
+        g_resources.flag_program.fragment_shader
+    );
+    glDeleteProgram(g_resources.flag_program.program);
+    glDeleteShader(g_resources.flag_program.vertex_shader);
+    glDeleteShader(g_resources.flag_program.fragment_shader);
+}
+
+static void update_flag_program(void)
+{
+    printf("reloading program\n");
+    GLuint vertex_shader, fragment_shader, program;
+
+    if (make_flag_program(&vertex_shader, &fragment_shader, &program)) {
+        delete_flag_program();
+        enact_flag_program(vertex_shader, fragment_shader, program);
+    }
+}
+
 static int make_resources(void)
 {
+    GLuint vertex_shader, fragment_shader, program;
+
     g_resources.flag_vertex_array = init_flag_mesh(&g_resources.flag);
     init_background_mesh(&g_resources.background);
 
@@ -129,39 +205,10 @@ static int make_resources(void)
     if (g_resources.flag.texture == 0 || g_resources.background.texture == 0)
         return 0;
 
-    g_resources.flag_program.vertex_shader
-        = make_shader(GL_VERTEX_SHADER, "flag.v.glsl");
-    if (g_resources.flag_program.vertex_shader == 0)
-        return 0;
-    g_resources.flag_program.fragment_shader
-        = make_shader(GL_FRAGMENT_SHADER, "flag.f.glsl");
-    if (g_resources.flag_program.fragment_shader == 0)
+    if (!make_flag_program(&vertex_shader, &fragment_shader, &program))
         return 0;
 
-    g_resources.flag_program.program = make_program(
-        g_resources.flag_program.vertex_shader,
-        g_resources.flag_program.fragment_shader
-    );
-    if (g_resources.flag_program.program == 0)
-        return 0;
-
-    g_resources.flag_program.uniforms.texture
-        = glGetUniformLocation(g_resources.flag_program.program, "texture");
-    g_resources.flag_program.uniforms.p_matrix
-        = glGetUniformLocation(g_resources.flag_program.program, "p_matrix");
-    g_resources.flag_program.uniforms.mv_matrix
-        = glGetUniformLocation(g_resources.flag_program.program, "mv_matrix");
-
-    g_resources.flag_program.attributes.position
-        = glGetAttribLocation(g_resources.flag_program.program, "position");
-    g_resources.flag_program.attributes.normal
-        = glGetAttribLocation(g_resources.flag_program.program, "normal");
-    g_resources.flag_program.attributes.texcoord
-        = glGetAttribLocation(g_resources.flag_program.program, "texcoord");
-    g_resources.flag_program.attributes.shininess
-        = glGetAttribLocation(g_resources.flag_program.program, "shininess");
-    g_resources.flag_program.attributes.specular
-        = glGetAttribLocation(g_resources.flag_program.program, "specular");
+    enact_flag_program(vertex_shader, fragment_shader, program);
 
     g_resources.eye_offset[0] = 0.0f;
     g_resources.eye_offset[1] = 0.0f;
@@ -202,6 +249,13 @@ static void mouse(int button, int state, int x, int y)
         g_resources.eye_offset[0] = 0.0f;
         g_resources.eye_offset[1] = 0.0f;
         update_mv_matrix(g_resources.mv_matrix, g_resources.eye_offset);
+    }
+}
+
+static void keyboard(unsigned char key, int x, int y)
+{
+    if (key == 'r' || key == 'R') {
+        update_flag_program();
     }
 }
 
@@ -262,6 +316,7 @@ int main(int argc, char* argv[])
     glutReshapeFunc(&reshape);
     glutMotionFunc(&drag);
     glutMouseFunc(&mouse);
+    glutKeyboardFunc(&keyboard);
 
     glewInit();
     if (!GLEW_VERSION_2_0) {
