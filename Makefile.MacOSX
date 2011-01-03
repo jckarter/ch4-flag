@@ -1,6 +1,6 @@
 GLEW_INCLUDE = /opt/local/include
 GLEW_LIB = /opt/local/lib
-CC_FLAGS = -Wall -Wextra -ansi -pedantic
+CC_FLAGS = -ansi -Wextra# -Wall -pedantic # raise warnings about unused functions, variables, and dangerous initializations
 
 flag: file-util.o gl-util.o meshes.o flag.o
 	gcc $(CC_FLAGS) -o flag $^ -framework GLUT -framework OpenGL -L$(GLEW_LIB) -lGLEW
