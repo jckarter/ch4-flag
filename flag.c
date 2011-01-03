@@ -6,6 +6,11 @@
 #  include <GL/glut.h>
 #endif
 #include <stddef.h>
+
+#ifdef WIN32 /* HACK Windows math.h may not define fminf so pretend it does */
+#  define fminf(a,b) (a) < (b) ? (a) : (b)
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include "file-util.h"
@@ -13,7 +18,6 @@
 #include "vec-util.h"
 #include "meshes.h"
 
-#define MIN(a,b) (a) < (b) ? (a) : (b)
 
 static struct {
     struct flag_mesh flag, background;
@@ -51,7 +55,7 @@ static void update_p_matrix(GLfloat *matrix, int w, int h)
 {
     GLfloat wf = (GLfloat)w, hf = (GLfloat)h;
     GLfloat
-        r_xy_factor = MIN(wf, hf) * 1.0f/PROJECTION_FOV_RATIO,
+        r_xy_factor = fminf(wf, hf) * 1.0f/PROJECTION_FOV_RATIO,
         r_x = r_xy_factor/wf,
         r_y = r_xy_factor/hf,
         r_zw_factor = 1.0f/(PROJECTION_FAR_PLANE - PROJECTION_NEAR_PLANE),
@@ -321,7 +325,7 @@ int main(int argc, char* argv[])
     glutKeyboardFunc(&keyboard);
 
     glewInit();
-    if (!GL_VERSION_2_0) {
+    if (!GLEW_VERSION_2_0) {
         fprintf(stderr, "OpenGL 2.0 not available\n");
         return 1;
     }
