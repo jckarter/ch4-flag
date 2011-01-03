@@ -1,12 +1,12 @@
 GL_INCLUDE = /usr/X11R6/include
 GL_LIB = /usr/X11R6/lib
-# CC_FLAGS = -ansi  -Wextra# -Wall -pedantic # raise warnings about unused functions, variables, and dangerous initializations
+CC_FLAGS = -Wextra -Wall -pedantic # raise warnings about unused functions, variables, and dangerous initializations
 
 flag: file-util.o gl-util.o meshes.o flag.o
 	gcc -o flag $^ -L$(GL_LIB) -lGL -lglut -lGLEW
 
 .c.o:
-	gcc $(CC_FLAGS) -c -o $@ $< -I$(GL_INCLUDE)
+	gcc $(STANDARD) $(CC_FLAGS) -c -o $@ $< -I$(GL_INCLUDE)
 
 clean:
 	rm -f flag *.o
