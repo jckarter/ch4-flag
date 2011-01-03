@@ -183,8 +183,8 @@ static void delete_flag_program(void)
 
 static void update_flag_program(void)
 {
-    printf("reloading program\n");
     GLuint vertex_shader, fragment_shader, program;
+    printf("reloading program\n");
 
     if (make_flag_program(&vertex_shader, &fragment_shader, &program)) {
         delete_flag_program();
