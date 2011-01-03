@@ -1,6 +1,11 @@
 GL_INCLUDE = /usr/X11R6/include
 GL_LIB = /usr/X11R6/lib
-CC_FLAGS = -Wextra -Wall -pedantic # raise warnings about unused functions, variables, and dangerous initializations
+CC_FLAGS = -Wextra -Wall -pedantic# warnings about unused functions, variables
+
+# ansi / c89 is not an option since sinf and the like are not defined in that
+# standard as built-in functions see
+# http://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+STANDARD = -std=c99
 
 flag: file-util.o gl-util.o meshes.o flag.o
 	gcc -o flag $^ -L$(GL_LIB) -lGL -lglut -lGLEW
