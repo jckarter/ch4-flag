@@ -319,7 +319,7 @@ int main(int argc, char* argv[])
     glutKeyboardFunc(&keyboard);
 
     glewInit();
-    if (!GLEW_VERSION_2_0) {
+    if (!GL_VERSION_2_0) {
         fprintf(stderr, "OpenGL 2.0 not available\n");
         return 1;
     }
