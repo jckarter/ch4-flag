@@ -2,7 +2,7 @@ GL_INCLUDE = /usr/X11R6/include
 GL_LIB = /usr/X11R6/lib
 
 flag: file-util.o gl-util.o meshes.o flag.o
-	gcc -o flag $^ -L$(GL_LIB) -lGL -lglut -lGLEW
+	gcc -o flag $^ -L$(GL_LIB) -lm -lGL -lglut -lGLEW
 
 .c.o:
 	gcc -c -o $@ $< -I$(GL_INCLUDE)
