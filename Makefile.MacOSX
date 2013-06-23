@@ -1,11 +1,17 @@
 GLEW_INCLUDE = /opt/local/include
 GLEW_LIB = /opt/local/lib
+CC_FLAGS = -Wextra -Wall -pedantic# warnings about unused functions, variables
+
+# ansi / c89 is not an option since sinf and the like are not defined in that
+# standard as built-in functions see
+# http://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+STANDARD = -std=c99
 
 flag: file-util.o gl-util.o meshes.o flag.o
 	gcc -o flag $^ -framework GLUT -framework OpenGL -L$(GLEW_LIB) -lGLEW
 
 .c.o:
-	gcc -c -o $@ $< -I$(GLEW_INCLUDE)
+	gcc $(STANDARD) $(CC_FLAGS) -c -o $@ $< -I$(GLEW_INCLUDE)
 
 clean:
 	rm -f flag *.o

@@ -42,20 +42,16 @@ static void calculate_flag_vertex(
     struct flag_vertex *v,
     GLfloat s, GLfloat t, GLfloat time
 ) {
-    GLfloat
-        sgrad[3] = {
-            1.0f + 0.5f*(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f),
-            0.0f,
-            0.125f*(
-                sinf(1.5f*(GLfloat)M_PI*(time + s)) 
-                + s*cosf(1.5f*(GLfloat)M_PI*(time + s))*(1.5f*(GLfloat)M_PI)
-            )
-        },
-        tgrad[3] = {
-            -(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - s)*(2.0f*t - 1.0f),
-            0.75f,
-            0.0f
-        };
+    GLfloat sgrad[3],tgrad[3];
+    /* Using explicit notation to fix the warning 
+     * warning: initializer element is not computable at load time */
+    sgrad[0] = 1.0f + 0.5f*(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*t*(t - 1.0f);
+    sgrad[1] = 0.0f;
+    sgrad[2] = 0.125f*( sinf(1.5f*(GLfloat)M_PI*(time + s)) + s*cosf(1.5f*(GLfloat)M_PI*(time + s))*(1.5f*(GLfloat)M_PI));
+
+    tgrad[0] = -(0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - s)*(2.0f*t - 1.0f);
+    tgrad[1] = 0.75f;
+    tgrad[2] = 0.0f;
 
     v->position[0] = s - (0.0625f+0.03125f*sinf((GLfloat)M_PI*time))*(1.0f - 0.5f*s)*t*(t-1.0f);
     v->position[1] = 0.75f*t - 0.375f;
@@ -136,12 +132,7 @@ void init_background_mesh(struct flag_mesh *out_mesh)
     GLfloat FLAGPOLE_AXIS_XZ[2] = { -FLAGPOLE_SHAFT_RADIUS, 0.0f };
     static const GLubyte FLAGPOLE_SPECULAR[4] = { 255, 255, 192, 0 };
 
-    GLfloat
-        GROUND_LO[3] = { -0.875f, FLAGPOLE_SHAFT_BOTTOM, -2.45f },
-        GROUND_HI[3] = {  1.875f, FLAGPOLE_SHAFT_BOTTOM,  0.20f },
-        WALL_LO[3] = { GROUND_LO[0], FLAGPOLE_SHAFT_BOTTOM, GROUND_HI[2] },
-        WALL_HI[3] = { GROUND_HI[0], FLAGPOLE_SHAFT_BOTTOM + 3.0f, GROUND_HI[2] };
-
+    GLfloat GROUND_LO[3] , GROUND_HI[3] , WALL_LO[3] , WALL_HI[3];
     static GLfloat
         TEX_FLAGPOLE_LO[2] = { 0.0f,    0.0f },
         TEX_FLAGPOLE_HI[2] = { 0.03125f,  1.0f },
@@ -190,6 +181,21 @@ void init_background_mesh(struct flag_mesh *out_mesh)
 
     GLushort *element_data
         = (GLushort*) malloc(element_count * sizeof(GLushort));
+
+    GROUND_LO[0] =  -0.875f;
+    GROUND_LO[1] = FLAGPOLE_SHAFT_BOTTOM; 
+    GROUND_LO[2] = -2.45f ;
+
+    GROUND_HI[0] =  1.875f;
+    GROUND_HI[1] =  FLAGPOLE_SHAFT_BOTTOM;
+    GROUND_HI[2] =  0.20f;
+
+    WALL_LO[0] = GROUND_LO[0];
+    WALL_LO[1] = FLAGPOLE_SHAFT_BOTTOM;
+    WALL_LO[2] = GROUND_HI[2] ;
+    WALL_HI[0] = GROUND_HI[0];
+    WALL_HI[1] = FLAGPOLE_SHAFT_BOTTOM + 3.0f;
+    WALL_HI[2] = GROUND_HI[2] ;
 
     vertex_data[0].position[0] = GROUND_LO[0];
     vertex_data[0].position[1] = GROUND_LO[1];

@@ -46,9 +46,9 @@ void *read_tga(const char *filename, int *width, int *height)
        char  bits_per_pixel;
        char  image_descriptor;
     } header;
-    int i, color_map_size, pixels_size;
+    int i, color_map_size;
+    size_t pixels_size, read;
     FILE *f;
-    size_t read;
     void *pixels;
 
     f = fopen(filename, "rb");

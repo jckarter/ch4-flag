@@ -6,12 +6,18 @@
 #  include <GL/glut.h>
 #endif
 #include <stddef.h>
+
+#ifdef WIN32 /* HACK Windows math.h may not define fminf so pretend it does */
+#  define fminf(a,b) (a) < (b) ? (a) : (b)
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include "file-util.h"
 #include "gl-util.h"
 #include "vec-util.h"
 #include "meshes.h"
+
 
 static struct {
     struct flag_mesh flag, background;
@@ -183,8 +189,8 @@ static void delete_flag_program(void)
 
 static void update_flag_program(void)
 {
-    printf("reloading program\n");
     GLuint vertex_shader, fragment_shader, program;
+    printf("reloading program\n");
 
     if (make_flag_program(&vertex_shader, &fragment_shader, &program)) {
         delete_flag_program();
